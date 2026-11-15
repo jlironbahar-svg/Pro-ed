@@ -1,8 +1,13 @@
-import { loadConfig } from './config.js';
+import { assertSecrets, loadConfig } from './config.js';
 import { buildApp } from './app.js';
+import { openDb, pruneOldData } from './db.js';
 
 const config = loadConfig();
-const app = await buildApp({ config });
+assertSecrets(config);
+const db = openDb(config.dataDir);
+pruneOldData(db);
+setInterval(() => pruneOldData(db), 24 * 3600_000).unref();
+const app = await buildApp({ config, db });
 
 try {
   await app.listen({ port: config.port, host: config.host });
@@ -13,6 +18,9 @@ try {
 
 for (const signal of ['SIGINT', 'SIGTERM'] as const) {
   process.on(signal, () => {
-    app.close().then(() => process.exit(0));
+    app.close().then(() => {
+      db.close();
+      process.exit(0);
+    });
   });
 }

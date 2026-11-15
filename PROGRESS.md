@@ -41,16 +41,16 @@ Legend: TODO / DOING NOW / DONE. Exactly one step is DOING NOW at any time.
 - [DONE] 4.5 Typecheck + build, commit + push
 
 ## Phase 5: Server part 2
-- [DOING NOW] 5.1 SQLite schema + db module (users, devices, settings, flags, events, audit, admin)
-- [TODO] 5.2 System state, flags, version settings modules
-- [TODO] 5.3 POST /api/check (invite code + device id + username hash, signed JWT)
-- [TODO] 5.4 POST /api/heartbeat + presence
-- [TODO] 5.5 Rate limiting on all routes, APK download route
-- [TODO] 5.6 Setup script (admin account + TOTP QR + first invite code)
-- [TODO] 5.7 Typecheck + build, smoke test, commit + push
+- [DONE] 5.1 SQLite schema + db module (users, devices, settings, flags, events, audit, admin)
+- [DONE] 5.2 System state, flags, version settings modules
+- [DONE] 5.3 POST /api/check (invite code + device id + username hash, signed JWT)
+- [DONE] 5.4 POST /api/heartbeat + presence
+- [DONE] 5.5 Rate limiting on all routes, APK download route
+- [DONE] 5.6 Setup script (admin account + TOTP QR + first invite code)
+- [DONE] 5.7 Typecheck + build, smoke test, commit + push
 
 ## Phase 6: ProEd app integration
-- [TODO] 6.1 Access client: device id, username hash, check call, JWT verify/decode, cache
+- [DOING NOW] 6.1 Access client: device id, username hash, check call, JWT verify/decode, cache
 - [TODO] 6.2 Grace period logic (72 h configurable) + 15 min periodic check
 - [TODO] 6.3 Invite-code screen
 - [TODO] 6.4 Lock / shutdown / update-required screens, recovery banner, update banner

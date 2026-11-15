@@ -31,6 +31,8 @@ export interface AccessClaims {
   flags: Record<string, boolean>;
   minVersion: string;
   latestApk: LatestApk | null;
+  /** Settings revision: the heartbeat asks for a new check when it changes. */
+  rev: number;
   /** user id */
   sub?: string;
   iat?: number;

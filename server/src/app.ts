@@ -1,14 +1,20 @@
 import Fastify, { LogController, type FastifyInstance } from 'fastify';
 import rateLimit from '@fastify/rate-limit';
+import fastifyJwt from '@fastify/jwt';
 import type { Config } from './config.js';
+import type { DB } from './db.js';
+import { accessTokens } from './lib/tokens.js';
 import { relayRoutes } from './routes/relay.js';
 import { pwaRoutes } from './routes/pwa.js';
+import { apiRoutes } from './routes/api.js';
+import { downloadRoutes } from './routes/download.js';
 
 export interface AppDeps {
   config: Config;
+  db: DB;
 }
 
-export async function buildApp({ config }: AppDeps): Promise<FastifyInstance> {
+export async function buildApp({ config, db }: AppDeps): Promise<FastifyInstance> {
   const app = Fastify({
     trustProxy: config.trustProxy,
     bodyLimit: 256 * 1024,
@@ -57,8 +63,18 @@ export async function buildApp({ config }: AppDeps): Promise<FastifyInstance> {
 
   await app.register(rateLimit, { global: true, max: 600, timeWindow: '1 minute' });
 
+  // Admin sessions: HS256 with ADMIN_JWT_SECRET. Access tokens use their own ES256 keys (lib/tokens.ts).
+  await app.register(fastifyJwt, {
+    secret: config.adminJwtSecret,
+    sign: { algorithm: 'HS256' },
+    verify: { algorithms: ['HS256'] },
+  });
+  const tokens = accessTokens(app, config);
+
   app.get('/healthz', { config: { rateLimit: false } }, async () => ({ ok: true }));
 
+  await app.register(apiRoutes, { db, config, tokens });
+  await app.register(downloadRoutes, { db, dataDir: config.dataDir });
   await app.register(relayRoutes, { extraHosts: config.relayExtraHosts });
   await app.register(pwaRoutes, { root: config.pwaDir });
 
