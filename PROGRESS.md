@@ -50,15 +50,15 @@ Legend: TODO / DOING NOW / DONE. Exactly one step is DOING NOW at any time.
 - [DONE] 5.7 Typecheck + build, smoke test, commit + push
 
 ## Phase 6: ProEd app integration
-- [DOING NOW] 6.1 Access client: device id, username hash, check call, JWT verify/decode, cache
-- [TODO] 6.2 Grace period logic (72 h configurable) + 15 min periodic check
-- [TODO] 6.3 Invite-code screen
-- [TODO] 6.4 Lock / shutdown / update-required screens, recovery banner, update banner
-- [TODO] 6.5 Heartbeat every 60 s, feature flags hook
-- [TODO] 6.6 Typecheck + build, commit + push
+- [DONE] 6.1 Access client: device id, username hash, check call, JWT verify/decode, cache
+- [DONE] 6.2 Grace period logic (72 h configurable) + 15 min periodic check
+- [DONE] 6.3 Invite-code screen
+- [DONE] 6.4 Lock / shutdown / update-required screens, recovery banner, update banner
+- [DONE] 6.5 Heartbeat every 60 s, feature flags hook
+- [DONE] 6.6 Typecheck + build, commit + push
 
 ## Phase 7: ProEd Admin
-- [TODO] 7.1 Admin API: login (password + TOTP), admin JWT, guard, audit log helper
+- [DOING NOW] 7.1 Admin API: login (password + TOTP), admin JWT, guard, audit log helper
 - [TODO] 7.2 Admin API: dashboard stats, online list, DAU 30 days, recent events
 - [TODO] 7.3 Admin API: users CRUD, invite codes, block/unblock, channel
 - [TODO] 7.4 Admin API: flags, system state, min version, APK upload, audit list

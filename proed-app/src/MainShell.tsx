@@ -4,6 +4,7 @@ import { useT } from './lib/i18n';
 import { useFlag } from './access/flags';
 import { homeworkStore, refreshHomework } from './homework/store';
 import { TabBar, type Tab } from './components/TabBar';
+import { BannerContext } from './components/BannerContext';
 import { TodayScreen } from './screens/TodayScreen';
 import { HomeworkScreen } from './screens/HomeworkScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
@@ -40,12 +41,13 @@ export function MainShell({ canRefresh, banner }: { canRefresh: boolean; banner?
   ];
 
   return (
-    <div className="min-h-dvh bg-bg pb-[calc(56px+env(safe-area-inset-bottom))]">
-      {banner}
-      {current === 'today' && <TodayScreen canRefresh={canRefresh} onSeeAll={() => setTab('homework')} />}
-      {current === 'homework' && <HomeworkScreen canRefresh={canRefresh} />}
-      {current === 'settings' && <SettingsScreen />}
-      <TabBar tabs={tabs} active={current} onChange={setTab} />
-    </div>
+    <BannerContext.Provider value={banner}>
+      <div className="min-h-dvh bg-bg pb-[calc(56px+env(safe-area-inset-bottom))]">
+        {current === 'today' && <TodayScreen canRefresh={canRefresh} onSeeAll={() => setTab('homework')} />}
+        {current === 'homework' && <HomeworkScreen canRefresh={canRefresh} />}
+        {current === 'settings' && <SettingsScreen />}
+        <TabBar tabs={tabs} active={current} onChange={setTab} />
+      </div>
+    </BannerContext.Provider>
   );
 }

@@ -8,12 +8,15 @@ export function TopBar({
   subtitle,
   left,
   right,
+  below,
   className,
 }: {
   title?: ReactNode;
   subtitle?: ReactNode;
   left?: ReactNode;
   right?: ReactNode;
+  /** Rendered under the bar, inside the sticky header (status banners). */
+  below?: ReactNode;
   className?: string;
 }) {
   return (
@@ -26,6 +29,7 @@ export function TopBar({
         </div>
         {right ? <div className="flex items-center gap-1">{right}</div> : null}
       </div>
+      {below}
     </header>
   );
 }

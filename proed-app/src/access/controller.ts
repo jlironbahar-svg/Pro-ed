@@ -1,0 +1,185 @@
+import type { AccessClaims, CheckRequest, CheckResponse, DenyReason, HeartbeatResponse } from '@proed/shared/core';
+import { ACCESS_CHECK_INTERVAL_MS, HEARTBEAT_INTERVAL_MS } from '@proed/shared/core';
+import { createStore } from '../lib/store';
+import { db, randomId } from '../lib/storage';
+import { APP_VERSION, deviceType, isNative, serverUrl } from '../lib/platform';
+import { sessionStore } from '../lib/session';
+import { setPronoteGuard } from '../homework/store';
+import { flagsStore } from './flags';
+import { sha256Hex, verifyToken } from './jwt';
+import { canCallPronote, evaluateAccess, type AccessView } from './logic';
+
+interface Saved {
+  inviteCode: string | null;
+  token: string | null;
+  publicKey: string | null;
+  deviceId: string;
+}
+
+export interface AccessState extends Saved {
+  ready: boolean;
+  claims: AccessClaims | null;
+  checking: boolean;
+  /** Last check could not reach the server. */
+  offline: boolean;
+  view: AccessView | null;
+}
+
+const KEY = 'access';
+const BUILD_KEY = import.meta.env.VITE_ACCESS_PUBLIC_KEY || null;
+
+export const accessStore = createStore<AccessState>({
+  ready: false,
+  inviteCode: null,
+  token: null,
+  publicKey: null,
+  deviceId: '',
+  claims: null,
+  checking: false,
+  offline: false,
+  view: null,
+});
+
+setPronoteGuard(() => canCallPronote(accessStore.get().view));
+
+function persist(): void {
+  const { inviteCode, token, publicKey, deviceId } = accessStore.get();
+  void db.set(KEY, { inviteCode, token, publicKey, deviceId } satisfies Saved);
+}
+
+function computeView(claims: AccessClaims | null): AccessView | null {
+  return claims ? evaluateAccess(claims, Date.now(), APP_VERSION, isNative()) : null;
+}
+
+function applyClaims(claims: AccessClaims | null): void {
+  accessStore.set((s) => ({ ...s, claims, view: computeView(claims) }));
+  if (claims?.allowed) flagsStore.set(claims.flags ?? {});
+}
+
+/** Loads the saved code and token, and verifies the token offline. */
+export async function loadAccess(): Promise<void> {
+  const saved = await db.get<Saved>(KEY).catch(() => undefined);
+  const deviceId = saved?.deviceId || randomId();
+  const publicKey = BUILD_KEY ?? saved?.publicKey ?? null;
+  let claims: AccessClaims | null = null;
+  if (saved?.token && publicKey) claims = await verifyToken(saved.token, publicKey);
+  accessStore.set((s) => ({
+    ...s,
+    ready: true,
+    inviteCode: saved?.inviteCode ?? null,
+    token: claims ? saved!.token : null,
+    publicKey,
+    deviceId,
+    checking: !!saved?.inviteCode && !claims,
+  }));
+  applyClaims(claims);
+  persist();
+}
+
+async function usernameHash(): Promise<string | undefined> {
+  const username = sessionStore.get()?.username;
+  return username ? sha256Hex(username.trim().toLowerCase()) : undefined;
+}
+
+export type CheckResult = { status: 'ok' } | { status: 'denied'; reason: DenyReason } | { status: 'offline' };
+
+/** POST /api/check. Sends only the invite code, a random device id and a hash of the Pronote username. */
+export async function runCheck(code?: string): Promise<CheckResult> {
+  const state = accessStore.get();
+  const inviteCode = code ?? state.inviteCode;
+  if (!inviteCode) return { status: 'denied', reason: 'unknown_code' };
+  accessStore.set((s) => ({ ...s, checking: true }));
+  try {
+    const body: CheckRequest = {
+      inviteCode,
+      deviceId: state.deviceId,
+      usernameHash: await usernameHash(),
+      deviceType: deviceType(),
+      appVersion: APP_VERSION,
+    };
+    const res = await fetch(serverUrl('/api/check'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) throw new Error(`check ${res.status}`);
+    const data = (await res.json()) as CheckResponse;
+    // Pinned key: from the build, else the one we saw first (trust on first use).
+    const key = BUILD_KEY ?? state.publicKey ?? data.publicKey;
+    const claims = await verifyToken(data.token, key);
+    if (!claims) throw new Error('bad token');
+
+    // An unknown code typed on the invite screen is not saved.
+    if (!claims.allowed && claims.reason === 'unknown_code' && code) {
+      accessStore.set((s) => ({ ...s, checking: false, offline: false }));
+      return { status: 'denied', reason: 'unknown_code' };
+    }
+    if (!claims.allowed && claims.reason === 'code_in_use' && code && !state.inviteCode) {
+      accessStore.set((s) => ({ ...s, checking: false, offline: false }));
+      return { status: 'denied', reason: 'code_in_use' };
+    }
+    accessStore.set((s) => ({ ...s, inviteCode, token: data.token, publicKey: key, checking: false, offline: false }));
+    applyClaims(claims);
+    persist();
+    return claims.allowed ? { status: 'ok' } : { status: 'denied', reason: claims.reason ?? 'blocked' };
+  } catch {
+    accessStore.set((s) => ({ ...s, checking: false, offline: true }));
+    // Re-evaluate the cached token: it may have expired while offline.
+    applyClaims(accessStore.get().claims);
+    return { status: 'offline' };
+  }
+}
+
+export function forgetInviteCode(): void {
+  accessStore.set((s) => ({ ...s, inviteCode: null, token: null, claims: null, view: null }));
+  flagsStore.set({});
+  persist();
+}
+
+async function heartbeat(): Promise<void> {
+  const { token, deviceId, view } = accessStore.get();
+  if (!token || view?.kind !== 'ok' || document.visibilityState !== 'visible') return;
+  try {
+    const res = await fetch(serverUrl('/api/heartbeat'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ deviceId, deviceType: deviceType(), appVersion: APP_VERSION }),
+    });
+    const data = (await res.json().catch(() => ({ ok: false, recheck: true }))) as HeartbeatResponse;
+    if (data.recheck) await runCheck();
+  } catch {
+    /* offline: the 15 min check handles it */
+  }
+}
+
+let started = false;
+let lastCheck = 0;
+
+/** Access check at start and every 15 minutes, heartbeat every 60 s while the app is open. */
+export function startAccessLoop(): void {
+  if (started) return;
+  started = true;
+  const check = () => {
+    lastCheck = Date.now();
+    void runCheck();
+  };
+  if (accessStore.get().inviteCode) check();
+  window.setInterval(() => accessStore.get().inviteCode && check(), ACCESS_CHECK_INTERVAL_MS);
+  window.setInterval(() => void heartbeat(), HEARTBEAT_INTERVAL_MS);
+  // Re-evaluate the token expiry every minute (offline grace period).
+  window.setInterval(() => applyClaims(accessStore.get().claims), 60_000);
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState !== 'visible' || !accessStore.get().inviteCode) return;
+    if (Date.now() - lastCheck > ACCESS_CHECK_INTERVAL_MS) check();
+    else void heartbeat();
+  });
+  // First Pronote login: check again so the server can bind the username hash.
+  let previous = sessionStore.get()?.username;
+  sessionStore.subscribe(() => {
+    const current = sessionStore.get()?.username;
+    if (current && current !== previous && accessStore.get().inviteCode) check();
+    previous = current;
+  });
+  window.setTimeout(() => void heartbeat(), 3_000);
+}
+

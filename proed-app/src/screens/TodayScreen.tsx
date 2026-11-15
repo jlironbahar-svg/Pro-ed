@@ -9,6 +9,7 @@ import { estimateFor, homeworkStore, isDone, refreshHomework } from '../homework
 import { planToday } from '../homework/today';
 import { dueLabel } from '../homework/due';
 import { HomeworkItem } from '../components/HomeworkItem';
+import { useBanner } from '../components/BannerContext';
 import { PullToRefresh } from '../components/PullToRefresh';
 import { RefreshBanner, useUpdatedLabel } from '../components/StatusLine';
 
@@ -17,6 +18,7 @@ export function TodayScreen({ canRefresh, onSeeAll }: { canRefresh: boolean; onS
   const state = useStore(homeworkStore);
   const now = useNow(60_000);
   const updated = useUpdatedLabel();
+  const banner = useBanner();
 
   const plan = useMemo(
     () => planToday(state.items, (h) => isDone(h, state.local), (h) => estimateFor(h, state), now),
@@ -94,6 +96,7 @@ export function TodayScreen({ canRefresh, onSeeAll }: { canRefresh: boolean; onS
       <TopBar
         title={t('today.title')}
         subtitle={updated}
+        below={banner}
         right={
           canRefresh ? (
             <IconButton label={t('hw.refresh')} onClick={() => refreshHomework()} disabled={state.loading}>

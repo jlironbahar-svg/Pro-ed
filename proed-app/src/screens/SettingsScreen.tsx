@@ -8,6 +8,7 @@ import { sessionStore } from '../lib/session';
 import { APP_VERSION } from '../lib/platform';
 import { logout } from '../pronote/client';
 import { clearHomework } from '../homework/store';
+import { useBanner } from '../components/BannerContext';
 
 function Row({ label, children }: { label: string; children: ReactNode }) {
   return (
@@ -30,10 +31,11 @@ export function SettingsScreen() {
   const session = useStore(sessionStore);
   const [confirm, setConfirm] = useState(false);
   const [busy, setBusy] = useState(false);
+  const banner = useBanner();
 
   return (
     <>
-      <TopBar title={t('settings.title')} />
+      <TopBar title={t('settings.title')} below={banner} />
       <div className="mx-auto flex max-w-2xl flex-col gap-6 px-4 pt-4 pb-8">
         <Card className="divide-y divide-line">
           <Row label={t('settings.language')}>

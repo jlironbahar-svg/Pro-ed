@@ -9,6 +9,7 @@ import { homeworkStore, isDone, refreshHomework, upcoming } from '../homework/st
 import { dueLabel } from '../homework/due';
 import type { Homework } from '../homework/model';
 import { HomeworkItem } from '../components/HomeworkItem';
+import { useBanner } from '../components/BannerContext';
 import { PullToRefresh } from '../components/PullToRefresh';
 import { RefreshBanner, useUpdatedLabel } from '../components/StatusLine';
 
@@ -18,6 +19,7 @@ export function HomeworkScreen({ canRefresh }: { canRefresh: boolean }) {
   const now = useNow(60_000);
   const [showDone, setShowDone] = useState(false);
   const updated = useUpdatedLabel();
+  const banner = useBanner();
 
   const list = useMemo(() => upcoming(state.items, now), [state.items, now]);
   const doneCount = list.filter((h) => isDone(h, state.local)).length;
@@ -70,6 +72,7 @@ export function HomeworkScreen({ canRefresh }: { canRefresh: boolean }) {
       <TopBar
         title={t('hw.title')}
         subtitle={updated}
+        below={banner}
         right={
           canRefresh ? (
             <IconButton label={t('hw.refresh')} onClick={() => refreshHomework()} disabled={state.loading}>
