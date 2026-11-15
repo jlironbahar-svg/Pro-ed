@@ -9,7 +9,8 @@
     "build": "tsc -p tsconfig.json",
     "start": "node --env-file-if-exists=.env dist/index.js",
     "setup": "tsc -p tsconfig.json && node --env-file-if-exists=.env dist/setup.js",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
   },
   "dependencies": {
     "@fastify/jwt": "^10.2.7",

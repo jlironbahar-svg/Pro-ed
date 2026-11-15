@@ -19,6 +19,8 @@ export async function buildApp({ config, db }: AppDeps): Promise<FastifyInstance
   const app = Fastify({
     trustProxy: config.trustProxy,
     bodyLimit: 256 * 1024,
+    // Unknown fields are rejected (400), not silently stripped: the API never accepts passwords or homework.
+    ajv: { customOptions: { removeAdditional: false } },
     logger: {
       level: config.logLevel,
       // Only method and path are logged: no bodies, no query strings, no headers (tokens stay out of logs).

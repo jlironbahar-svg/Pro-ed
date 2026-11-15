@@ -69,14 +69,14 @@ Legend: TODO / DOING NOW / DONE. Exactly one step is DOING NOW at any time.
 - [DONE] 7.9 Typecheck + build, commit + push
 
 ## Phase 8: Tests
-- [DOING NOW] 8.1 Vitest setup in workspaces
-- [TODO] 8.2 Estimate tests
-- [TODO] 8.3 Access check logic tests (client grace + server check)
-- [TODO] 8.4 Presence logic tests
-- [TODO] 8.5 Run all tests, commit + push
+- [DONE] 8.1 Vitest setup in workspaces
+- [DONE] 8.2 Estimate tests
+- [DONE] 8.3 Access check logic tests (client grace + server check)
+- [DONE] 8.4 Presence logic tests
+- [DONE] 8.5 Run all tests, commit + push
 
 ## Phase 9: Docs
-- [TODO] 9.1 README: overview + run locally
+- [DOING NOW] 9.1 README: overview + run locally
 - [TODO] 9.2 README: debug and signed APKs, keystore safety
 - [TODO] 9.3 README: deploy server + PWA with HTTPS (recommended host)
 - [TODO] 9.4 README: student guide (APK install, iPhone home screen)
