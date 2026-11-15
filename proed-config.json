@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "rev": 15,
-  "updatedAt": 1794756528031,
+  "rev": 16,
+  "updatedAt": 1794756530239,
   "salt": "oCRFlBf3oDNLB66xdcN4QH5z",
   "iterations": 150000,
   "graceHours": 72,
@@ -20,7 +20,7 @@
     },
     {
       "key": "timer",
-      "mode": "on",
+      "mode": "beta",
       "description": "Start/stop timer on homework"
     },
     {
