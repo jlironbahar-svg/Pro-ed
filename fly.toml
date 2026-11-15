@@ -1,6 +1,6 @@
 # Fly.io config for the ProEd server + PWA. See README, "Deploy the server".
 # Change "app" to a unique name (it becomes https://<app>.fly.dev).
-app = "proed-change-me"
+app = "proed-jlb"
 primary_region = "cdg"
 
 [build]

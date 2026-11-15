@@ -199,7 +199,7 @@ The server also serves the PWA (the iPhone version), so one deployment covers bo
    npm run setup -w proed-server -- --secrets-only
    ```
 
-3. Open `fly.toml` and change `app = "proed-change-me"` to a unique name, for example `proed-lycee-moliere`. Your address will be `https://proed-lycee-moliere.fly.dev`.
+3. `fly.toml` already names the app `proed-jlb`, so your address will be `https://proed-jlb.fly.dev`, and the APKs published on GitHub are built for that address. Keep it. If Fly says the name is taken, change it in `fly.toml`, then run the APK workflow again (section 2, option B). The commands below use `proed-lycee-moliere` as an example name: use yours.
 4. Create the app and the volume (region `cdg` is Paris):
 
    ```bash

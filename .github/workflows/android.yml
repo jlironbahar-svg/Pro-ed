@@ -1,7 +1,10 @@
-# Builds the ProEd and ProEd Admin APKs on GitHub (no Android Studio needed).
-# Run it from the "Actions" tab ("Run workflow"), then download the APKs from the run's "Artifacts".
+# Builds the ProEd and ProEd Admin APKs on GitHub (no Android Studio needed) and publishes them
+# to the "apk-latest" release, with fixed download links:
+#   https://github.com/<owner>/<repo>/releases/download/apk-latest/ProEd.apk
+#   https://github.com/<owner>/<repo>/releases/download/apk-latest/ProEd-Admin.apk
+# Run it from the "Actions" tab ("Run workflow").
 # Optional settings (repository Settings > Secrets and variables > Actions):
-#   Variable  PROED_SERVER_URL          your server, e.g. https://proed-xxx.fly.dev
+#   Variable  PROED_SERVER_URL          your server (default: https://<app in fly.toml>.fly.dev)
 #   Variable  PROED_ACCESS_PUBLIC_KEY   access public key printed by the setup script (optional)
 #   Secrets   PROED_KEYSTORE_BASE64, PROED_KEYSTORE_PASSWORD, PROED_KEY_ALIAS, PROED_KEY_PASSWORD
 #             (student app release signing), and the same with PROED_ADMIN_ prefix for the admin app.
@@ -37,7 +40,10 @@ jobs:
       - run: npm ci
       - name: Write .env.android
         run: |
-          echo "VITE_SERVER_URL=${{ vars.PROED_SERVER_URL }}" > ${{ matrix.app }}/.env.android
+          URL="${{ vars.PROED_SERVER_URL }}"
+          if [ -z "$URL" ]; then URL="https://$(sed -n 's/^app = "\(.*\)"$/\1/p' fly.toml).fly.dev"; fi
+          echo "Server address in the app: $URL"
+          echo "VITE_SERVER_URL=$URL" > ${{ matrix.app }}/.env.android
           echo "VITE_ACCESS_PUBLIC_KEY=${{ vars.PROED_ACCESS_PUBLIC_KEY }}" >> ${{ matrix.app }}/.env.android
       - name: Build web app and sync Android project
         run: npm run android:sync -w ${{ matrix.app }}
@@ -56,14 +62,42 @@ jobs:
           echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.jks"
           PROED_KEYSTORE_FILE="$RUNNER_TEMP/release.jks" ./gradlew assembleRelease --no-daemon
           rm -f "$RUNNER_TEMP/release.jks"
-      - name: Collect APKs
+      - name: Collect APK (signed release when available, else debug)
         run: |
           mkdir -p out
-          cp ${{ matrix.app }}/android/app/build/outputs/apk/debug/app-debug.apk out/${{ matrix.name }}-debug.apk
-          if [ -f ${{ matrix.app }}/android/app/build/outputs/apk/release/app-release.apk ]; then
-            cp ${{ matrix.app }}/android/app/build/outputs/apk/release/app-release.apk out/${{ matrix.name }}-release.apk
-          fi
+          RELEASE=${{ matrix.app }}/android/app/build/outputs/apk/release/app-release.apk
+          if [ -f "$RELEASE" ]; then cp "$RELEASE" out/${{ matrix.name }}.apk
+          else cp ${{ matrix.app }}/android/app/build/outputs/apk/debug/app-debug.apk out/${{ matrix.name }}.apk; fi
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.name }}-apk
           path: out/*.apk
+          if-no-files-found: error
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: out
+          merge-multiple: true
+      - name: Publish to the apk-latest release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          ls -la out
+          BASE="https://github.com/${{ github.repository }}/releases/download/apk-latest"
+          NOTES="Latest ProEd APKs (built from ${GITHUB_SHA::7}).
+
+          - ProEd (students): $BASE/ProEd.apk
+          - ProEd Admin: $BASE/ProEd-Admin.apk"
+          if gh release view apk-latest >/dev/null 2>&1; then
+            gh release edit apk-latest --notes "$NOTES"
+          else
+            gh release create apk-latest --target "$GITHUB_SHA" --title "ProEd APKs" --notes "$NOTES"
+          fi
+          gh release upload apk-latest out/*.apk --clobber
