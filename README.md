@@ -36,10 +36,10 @@ The APKs published on GitHub run in **serverless mode**. ProEd Admin saves invit
 
    If Android asks, allow your browser to install unknown apps.
 2. Create a GitHub token for ProEd Admin (once):
-   1. On github.com, open your photo > **Settings** > **Developer settings** > **Personal access tokens** > **Fine-grained tokens** > **Generate new token**.
-   2. Name: `ProEd Admin`. Expiration: the longest offered.
+   1. Open this link in Chrome (not in the GitHub app) and sign in: <https://github.com/settings/personal-access-tokens/new?name=ProEd%20Admin&description=ProEd%20Admin%20app&expires_in=365&contents=write>. On a phone, if parts of the page are missing, choose Chrome menu > **Desktop site**.
+   2. Check the name is `ProEd Admin`. Expiration: the longest offered.
    3. **Repository access**: Only select repositories > `Pro-ed`.
-   4. **Permissions** > Repository permissions > **Contents**: **Read and write**.
+   4. **Permissions**: **Contents** must say **Read and write** (if it is missing, add the Contents permission and choose Read and write).
    5. Click **Generate token** and copy it.
 3. Open ProEd Admin. The repository is already filled in (`jlironbahar-svg/Pro-ed`). Paste the token and sign in.
 4. In **Utilisateurs**, tap **+** to create one invite code per student, including one for yourself.
