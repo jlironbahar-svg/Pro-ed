@@ -181,7 +181,9 @@ For signed release APKs, also add these **secrets**: `PROED_KEYSTORE_BASE64` (th
 
 ## 3. Deploy the server and the PWA with HTTPS
 
-**Recommended host: [Fly.io](https://fly.io).** It runs the Docker image of this repo, gives you HTTPS automatically on `https://<name>.fly.dev`, and keeps the SQLite database on a small volume. For one school, the smallest machine (256 MB) and a 1 GB volume cost about 2 EUR per month, and the machine sleeps when nobody uses the app. (Free hosts like Render's free plan lose the database on every restart, so they are not a good fit.)
+**No money?** Use the [free option](#free-option-0-eur-no-card-your-own-computer--tailscale-funnel) below.
+
+**Recommended paid host: [Fly.io](https://fly.io).** It runs the Docker image of this repo, gives you HTTPS automatically on `https://<name>.fly.dev`, and keeps the SQLite database on a small volume. For one school, the smallest machine (256 MB) and a 1 GB volume cost about 2 EUR per month, and the machine sleeps when nobody uses the app. (Free hosts like Render's free plan lose the database on every restart, so they are not a good fit.)
 
 The server also serves the PWA (the iPhone version), so one deployment covers both.
 
@@ -233,6 +235,55 @@ The server also serves the PWA (the iPhone version), so one deployment covers bo
 To update later: `git pull` (or your changes), then `fly deploy`. Logs: `fly logs`.
 
 Optional: use your own domain with `fly certs add proed.example.com` and follow the DNS instructions it prints. Update `PUBLIC_URL` and rebuild the APKs with the new address.
+
+### Free option (0 EUR, no card): your own computer + Tailscale Funnel
+
+The server runs on your own computer. [Tailscale Funnel](https://tailscale.com/kb/1223/tailscale-funnel) (free personal plan, no card) gives it a fixed public HTTPS address like `https://my-pc.tail1234.ts.net`.
+
+Trade-off: students can reach the server only while your computer is on and awake. When it is off:
+- Android students keep working: their access stays valid for 72 h, and the APK talks to Pronote directly.
+- iPhone students still see their saved homework, but can't refresh it until the computer is back on.
+
+1. Install Node.js LTS from <https://nodejs.org> and download this repository (green **Code** button, **Download ZIP**, unzip).
+2. Open a terminal in the folder and run:
+
+   ```
+   npm install
+   npm run build
+   npm run setup -w proed-server
+   ```
+
+   Write down the admin password, scan the QR code with an authenticator app, and note the invite code.
+
+3. Install Tailscale from <https://tailscale.com/download> and sign in with a Google, Microsoft, GitHub or Apple account. On a Mac, also choose **Install CLI** in the Tailscale menu (settings).
+4. Start the public address:
+
+   ```
+   tailscale funnel --bg 8787
+   ```
+
+   The first time, it prints a link to turn on Funnel: open it and approve. Then it prints your address, `https://<computer>.<tailnet>.ts.net`. Run `tailscale funnel status` to see it again.
+5. Open `server/.env` in a text editor and set:
+
+   ```
+   PUBLIC_URL=https://<computer>.<tailnet>.ts.net
+   FORCE_HTTPS=false
+   ```
+
+6. Start the server and leave this terminal open:
+
+   ```
+   npm run start -w proed-server
+   ```
+
+7. Stop the computer from going to sleep while plugged in:
+   - Windows: Settings > System > Power > Sleep: Never.
+   - Mac: System Settings > Battery > Options: prevent automatic sleeping on power adapter.
+8. Build the APKs for your address: put the address on the first line of the `SERVER_URL` file at the root of the repository on GitHub (or set the `PROED_SERVER_URL` variable), then run the **Android APKs** workflow. The APK links stay the same.
+
+Your links: the iPhone app is `https://<computer>.<tailnet>.ts.net`, the admin is `.../console/`. The APKs are always downloadable from the GitHub release links, even when your computer is off.
+
+After restarting the computer, start the server again with `npm run start -w proed-server`. Funnel restarts by itself.
 
 ### Other hosts
 

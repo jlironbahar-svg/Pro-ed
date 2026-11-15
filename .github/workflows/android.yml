@@ -4,7 +4,7 @@
 #   https://github.com/<owner>/<repo>/releases/download/apk-latest/ProEd-Admin.apk
 # Run it from the "Actions" tab ("Run workflow").
 # Optional settings (repository Settings > Secrets and variables > Actions):
-#   Variable  PROED_SERVER_URL          your server (default: https://<app in fly.toml>.fly.dev)
+#   Variable  PROED_SERVER_URL          your server. Default: the first line of SERVER_URL, else https://<app in fly.toml>.fly.dev
 #   Variable  PROED_ACCESS_PUBLIC_KEY   access public key printed by the setup script (optional)
 #   Secrets   PROED_KEYSTORE_BASE64, PROED_KEYSTORE_PASSWORD, PROED_KEY_ALIAS, PROED_KEY_PASSWORD
 #             (student app release signing), and the same with PROED_ADMIN_ prefix for the admin app.
@@ -41,6 +41,7 @@ jobs:
       - name: Write .env.android
         run: |
           URL="${{ vars.PROED_SERVER_URL }}"
+          if [ -z "$URL" ] && [ -f SERVER_URL ]; then URL="$(head -n 1 SERVER_URL | tr -d '[:space:]')"; fi
           if [ -z "$URL" ]; then URL="https://$(sed -n 's/^app = "\(.*\)"$/\1/p' fly.toml).fly.dev"; fi
           echo "Server address in the app: $URL"
           echo "VITE_SERVER_URL=$URL" > ${{ matrix.app }}/.env.android
