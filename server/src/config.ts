@@ -18,6 +18,7 @@ export interface Config {
   graceHours: number;
   relayExtraHosts: string[];
   logLevel: string;
+  timeZone: string;
 }
 
 function list(value: string | undefined): string[] {
@@ -51,6 +52,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     graceHours: Number(env.ACCESS_GRACE_HOURS ?? DEFAULT_GRACE_HOURS),
     relayExtraHosts: list(env.RELAY_EXTRA_HOSTS).map((h) => h.toLowerCase()),
     logLevel: env.LOG_LEVEL ?? 'info',
+    timeZone: env.TIME_ZONE ?? 'Europe/Paris',
   };
 }
 

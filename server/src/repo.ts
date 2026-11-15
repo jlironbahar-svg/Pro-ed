@@ -102,6 +102,7 @@ export function touchDevice(
   userId: string,
   device: { id: string; deviceType: string; appVersion: string },
   now = Date.now(),
+  timeZone = 'UTC',
 ): void {
   db.prepare(
     `INSERT INTO devices (id, user_id, device_type, app_version, first_seen, last_seen) VALUES (?, ?, ?, ?, ?, ?)
@@ -109,7 +110,7 @@ export function touchDevice(
        app_version = excluded.app_version, last_seen = excluded.last_seen`,
   ).run(device.id, userId, device.deviceType, device.appVersion, now, now);
   db.prepare('UPDATE users SET last_seen = ? WHERE id = ?').run(now, userId);
-  db.prepare('INSERT OR IGNORE INTO activity (user_id, day) VALUES (?, ?)').run(userId, dayKey(now));
+  db.prepare('INSERT OR IGNORE INTO activity (user_id, day) VALUES (?, ?)').run(userId, dayKey(now, timeZone));
 }
 
 export function logEvent(

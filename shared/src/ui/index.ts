@@ -1,4 +1,5 @@
 export { cx } from './cx';
+export { createStore, useStore, type Store } from './store';
 export { Button, IconButton, type ButtonProps, type IconButtonProps } from './Button';
 export { Spinner } from './Spinner';
 export { Input, Textarea, Select, Field, type FieldProps } from './Form';

@@ -58,18 +58,18 @@ Legend: TODO / DOING NOW / DONE. Exactly one step is DOING NOW at any time.
 - [DONE] 6.6 Typecheck + build, commit + push
 
 ## Phase 7: ProEd Admin
-- [DOING NOW] 7.1 Admin API: login (password + TOTP), admin JWT, guard, audit log helper
-- [TODO] 7.2 Admin API: dashboard stats, online list, DAU 30 days, recent events
-- [TODO] 7.3 Admin API: users CRUD, invite codes, block/unblock, channel
-- [TODO] 7.4 Admin API: flags, system state, min version, APK upload, audit list
-- [TODO] 7.5 Scaffold /proed-admin (Vite, React, Tailwind shared preset, Recharts)
-- [TODO] 7.6 Admin screens: login, dashboard, users, user details, invites
-- [TODO] 7.7 Admin screens: beta + flags, system controls + APK upload, audit log
-- [TODO] 7.8 Capacitor Android for admin (name "ProEd Admin", icons)
-- [TODO] 7.9 Typecheck + build, commit + push
+- [DONE] 7.1 Admin API: login (password + TOTP), admin JWT, guard, audit log helper
+- [DONE] 7.2 Admin API: dashboard stats, online list, DAU 30 days, recent events
+- [DONE] 7.3 Admin API: users CRUD, invite codes, block/unblock, channel
+- [DONE] 7.4 Admin API: flags, system state, min version, APK upload, audit list
+- [DONE] 7.5 Scaffold /proed-admin (Vite, React, Tailwind shared preset, Recharts)
+- [DONE] 7.6 Admin screens: login, dashboard, users, user details, invites
+- [DONE] 7.7 Admin screens: beta + flags, system controls + APK upload, audit log
+- [DONE] 7.8 Capacitor Android for admin (name "ProEd Admin", icons)
+- [DONE] 7.9 Typecheck + build, commit + push
 
 ## Phase 8: Tests
-- [TODO] 8.1 Vitest setup in workspaces
+- [DOING NOW] 8.1 Vitest setup in workspaces
 - [TODO] 8.2 Estimate tests
 - [TODO] 8.3 Access check logic tests (client grace + server check)
 - [TODO] 8.4 Presence logic tests

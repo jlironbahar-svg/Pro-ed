@@ -57,7 +57,7 @@ export async function apiRoutes(app: FastifyInstance, opts: { db: DB; config: Co
       db.transaction(() => {
         if (decision.allowed && user) {
           if (decision.bind && body.usernameHash) bindUsername(db, user.id, body.usernameHash);
-          touchDevice(db, user.id, { id: body.deviceId, deviceType: body.deviceType, appVersion }, now);
+          touchDevice(db, user.id, { id: body.deviceId, deviceType: body.deviceType, appVersion }, now, config.timeZone);
           logEvent(db, { kind: 'check', userId: user.id, deviceType: body.deviceType, appVersion }, now);
         } else {
           logEvent(db, { kind: 'denied', userId: user?.id ?? null, code: code || null, reason: decision.reason, deviceType: body.deviceType, appVersion }, now);
@@ -96,7 +96,7 @@ export async function apiRoutes(app: FastifyInstance, opts: { db: DB; config: Co
       if (!user || user.blocked || !claims.allowed) return { ok: false, recheck: true };
 
       const appVersion = isValidVersion(req.body.appVersion) ? req.body.appVersion : '0.0.0';
-      touchDevice(db, user.id, { id: req.body.deviceId, deviceType: req.body.deviceType, appVersion });
+      touchDevice(db, user.id, { id: req.body.deviceId, deviceType: req.body.deviceType, appVersion }, Date.now(), config.timeZone);
       return { ok: true, recheck: claims.rev !== getRevision(db) || claims.channel !== user.channel };
     },
   );

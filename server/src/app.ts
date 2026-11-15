@@ -8,6 +8,7 @@ import { relayRoutes } from './routes/relay.js';
 import { pwaRoutes } from './routes/pwa.js';
 import { apiRoutes } from './routes/api.js';
 import { downloadRoutes } from './routes/download.js';
+import { adminRoutes } from './routes/admin.js';
 
 export interface AppDeps {
   config: Config;
@@ -75,6 +76,7 @@ export async function buildApp({ config, db }: AppDeps): Promise<FastifyInstance
 
   await app.register(apiRoutes, { db, config, tokens });
   await app.register(downloadRoutes, { db, dataDir: config.dataDir });
+  await app.register(adminRoutes, { db, config });
   await app.register(relayRoutes, { extraHosts: config.relayExtraHosts });
   await app.register(pwaRoutes, { root: config.pwaDir });
 
