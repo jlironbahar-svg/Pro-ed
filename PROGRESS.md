@@ -1,6 +1,6 @@
 # ProEd progress
 
-Status: IN PROGRESS
+Status: COMPLETE (all 10 phases done)
 
 Legend: TODO / DOING NOW / DONE. Exactly one step is DOING NOW at any time.
 
@@ -83,11 +83,11 @@ Legend: TODO / DOING NOW / DONE. Exactly one step is DOING NOW at any time.
 - [DONE] 9.5 Commit + push
 
 ## Phase 10: Final check
-- [DOING NOW] 10.1 Build every package, run tests
-- [TODO] 10.2 Emoji scan and cleanup
-- [TODO] 10.3 Secrets scan (.env ignored, no keys committed)
-- [TODO] 10.4 Record demo videos of the apps (Playwright) and send them
-- [TODO] 10.5 PROGRESS.md "complete" + final checklist, commit + push
+- [DONE] 10.1 Build every package, run tests
+- [DONE] 10.2 Emoji scan and cleanup
+- [DONE] 10.3 Secrets scan (.env ignored, no keys committed)
+- [DONE] 10.4 Record demo videos of the apps (Playwright) and send them
+- [DONE] 10.5 PROGRESS.md "complete" + final checklist, commit + push
 
 ## Decisions
 - Node 22, npm workspaces. Root scripts run each workspace.
@@ -115,3 +115,14 @@ Legend: TODO / DOING NOW / DONE. Exactly one step is DOING NOW at any time.
 - GitHub Actions workflow (.github/workflows/android.yml) builds debug APKs (and signed release APKs when secrets exist), since this sandbox can't reach Maven Central reliably.
 - Hosting: Fly.io recommended (Docker, volume for SQLite, automatic HTTPS, about 2 EUR/month). fly.toml at the root. The container starts as root only to chown the volume, then runs as "node" (setpriv).
 - Fastify rejects unknown request fields (removeAdditional: false), so /api/check can never receive a password or homework.
+- Demo videos (Playwright, recorded in the VM) were sent to the user: build + tests, student app, admin app, access control. They are not committed (binary files).
+
+## Final checklist: what you must do yourself
+1. Install Node 22 and run `npm install`, then `npm run setup -w proed-server` locally to try everything (README section 1).
+2. Deploy the server + PWA on Fly.io (README section 3): create the app and volume, import the secrets, `fly deploy`, then run the setup on the server to get your admin password, 2FA QR code and first invite code.
+3. Scan the 2FA QR code with an authenticator app and store the admin password in a password manager.
+4. Create a keystore for each Android app, back them up in two places, never commit them (README section 2).
+5. Build the APKs: Android Studio (`npm run android:release -w proed-app` / `-w proed-admin`) or the GitHub Actions workflow (set the `PROED_SERVER_URL` variable first). Building was not possible inside the cloud VM (Maven Central rate limits).
+6. Test the student app with your own Pronote account (no real account was available during the build), on an iPhone (Safari, Add to Home Screen) and on Android.
+7. If your school's Pronote is not on `*.index-education.net`, add its host to `RELAY_EXTRA_HOSTS`.
+8. Upload the ProEd APK in ProEd Admin > System so students get the download link, then create one invite code per student and share the student guide (README section 4).

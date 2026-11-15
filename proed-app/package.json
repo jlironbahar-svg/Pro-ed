@@ -8,7 +8,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.node.json",
-    "android:sync": "vite build --mode android && cap sync android",
+    "android:sync": "node -e \"require('fs').existsSync('.env.android')||(console.error('Missing proed-app/.env.android: copy .env.android.example and set VITE_SERVER_URL'),process.exit(1))\" && vite build --mode android && cap sync android",
     "android:debug": "npm run android:sync && cd android && ./gradlew assembleDebug",
     "android:release": "npm run android:sync && cd android && ./gradlew assembleRelease",
     "android:open": "cap open android",

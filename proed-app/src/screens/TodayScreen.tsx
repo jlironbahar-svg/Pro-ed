@@ -50,9 +50,9 @@ export function TodayScreen({ canRefresh, onSeeAll }: { canRefresh: boolean; onS
 
       {count > 0 ? (
         <section className="mt-8">
-          <div className="mb-2 flex items-baseline justify-between gap-4 px-1">
+          <div className="mb-2 px-1">
             <SectionLabel>{t('today.order')}</SectionLabel>
-            <span className="text-xs text-faint">{t('today.orderHint')}</span>
+            <p className="mt-0.5 text-xs text-faint">{t('today.orderHint')}</p>
           </div>
           <Card className="divide-y divide-line">
             {plan.todo.map((h, i) => (
