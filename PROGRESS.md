@@ -34,14 +34,14 @@ Legend: TODO / DOING NOW / DONE. Exactly one step is DOING NOW at any time.
 - [DONE] 3.5 Typecheck + build, smoke test, commit + push
 
 ## Phase 4: Capacitor Android for proed-app
-- [DOING NOW] 4.1 Install Capacitor core/cli/android/preferences, capacitor.config.ts (CapacitorHttp enabled, name "ProEd")
-- [TODO] 4.2 Add android platform (npx cap add android) and sync
-- [TODO] 4.3 Android icons + splash + app name, network security config
-- [TODO] 4.4 Build scripts (debug/release gradle), signing config template
-- [TODO] 4.5 Typecheck + build, commit + push
+- [DONE] 4.1 Install Capacitor core/cli/android/preferences, capacitor.config.ts (CapacitorHttp enabled, name "ProEd")
+- [DONE] 4.2 Add android platform (npx cap add android) and sync
+- [DONE] 4.3 Android icons + splash + app name, network security config
+- [DONE] 4.4 Build scripts (debug/release gradle), signing config template
+- [DONE] 4.5 Typecheck + build, commit + push
 
 ## Phase 5: Server part 2
-- [TODO] 5.1 SQLite schema + db module (users, devices, settings, flags, events, audit, admin)
+- [DOING NOW] 5.1 SQLite schema + db module (users, devices, settings, flags, events, audit, admin)
 - [TODO] 5.2 System state, flags, version settings modules
 - [TODO] 5.3 POST /api/check (invite code + device id + username hash, signed JWT)
 - [TODO] 5.4 POST /api/heartbeat + presence
@@ -109,3 +109,6 @@ Legend: TODO / DOING NOW / DONE. Exactly one step is DOING NOW at any time.
 - Today view = not-done homework due today or by the next school day (Fri/Sat -> through Monday). Order: due date, then shortest.
 - Access JWT: ES256. App verifies offline with WebCrypto against a pinned public key (from VITE_ACCESS_PUBLIC_KEY at build time, else the key returned by the first successful check).
 - Invite code binds to the first Pronote username hash it is used with; other usernames get "code_in_use".
+- Android: Capacitor 8 (minSdk 24, target 36). appId app.proed.student. CapacitorHttp enabled (native fetch). allowBackup=false so the Pronote token is not copied to cloud backups.
+- Android build here is blocked: Maven Central answers HTTP 429 through this sandbox's proxy. APKs are built by the user (Android Studio or gradlew) or by the GitHub Actions workflow added in phase 9.
+- Version name/code come from each app's package.json (scripts/android-gradle.mjs). Release signing reads android/keystore.properties or PROED_KEYSTORE_* env vars.

@@ -9,6 +9,8 @@ coverage/
 .env
 .env.*
 !.env.example
+!.env.*.example
+!keystore.properties.example
 *.keystore
 *.jks
 keystore.properties

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="proed_background">#F7F7F8</color>
+    <color name="colorPrimary">#1D378C</color>
+    <color name="colorPrimaryDark">#1D378C</color>
+    <color name="colorAccent">#1D378C</color>
+</resources>
