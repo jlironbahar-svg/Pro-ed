@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "rev": 18,
-  "updatedAt": 1794756542111,
+  "rev": 19,
+  "updatedAt": 1794756546361,
   "salt": "oCRFlBf3oDNLB66xdcN4QH5z",
   "iterations": 150000,
   "graceHours": 72,
@@ -15,7 +15,7 @@
   "flags": [
     {
       "key": "qr_login",
-      "mode": "on",
+      "mode": "beta",
       "description": "Login with a Pronote QR code"
     },
     {
