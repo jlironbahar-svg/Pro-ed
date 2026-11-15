@@ -27,14 +27,14 @@ Legend: TODO / DOING NOW / DONE. Exactly one step is DOING NOW at any time.
 - [DONE] 2.10 Typecheck + build, commit + push
 
 ## Phase 3: Server part 1
-- [DOING NOW] 3.1 Scaffold /server (Fastify, TS, env config, logger with redaction)
-- [TODO] 3.2 Pronote relay /relay (no body/secret logging, HTTPS-only target, host allowlist)
-- [TODO] 3.3 Serve PWA build (static, SPA fallback, cache headers for sw)
-- [TODO] 3.4 Dockerfile + .env.example
-- [TODO] 3.5 Typecheck + build, smoke test, commit + push
+- [DONE] 3.1 Scaffold /server (Fastify, TS, env config, logger with redaction)
+- [DONE] 3.2 Pronote relay /relay (no body/secret logging, HTTPS-only target, host allowlist)
+- [DONE] 3.3 Serve PWA build (static, SPA fallback, cache headers for sw)
+- [DONE] 3.4 Dockerfile + .env.example
+- [DONE] 3.5 Typecheck + build, smoke test, commit + push
 
 ## Phase 4: Capacitor Android for proed-app
-- [TODO] 4.1 Install Capacitor core/cli/android/preferences, capacitor.config.ts (CapacitorHttp enabled, name "ProEd")
+- [DOING NOW] 4.1 Install Capacitor core/cli/android/preferences, capacitor.config.ts (CapacitorHttp enabled, name "ProEd")
 - [TODO] 4.2 Add android platform (npx cap add android) and sync
 - [TODO] 4.3 Android icons + splash + app name, network security config
 - [TODO] 4.4 Build scripts (debug/release gradle), signing config template

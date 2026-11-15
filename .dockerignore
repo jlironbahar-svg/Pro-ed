@@ -1,0 +1,10 @@
+**/node_modules
+**/dist
+**/android
+**/.env
+**/.env.*
+server/data
+*.apk
+*.keystore
+*.jks
+.git
