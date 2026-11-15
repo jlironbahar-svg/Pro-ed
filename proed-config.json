@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "rev": 2,
+  "rev": 3,
   "updatedAt": 1794748989473,
   "salt": "oCRFlBf3oDNLB66xdcN4QH5z",
   "iterations": 150000,
@@ -9,7 +9,7 @@
   "message": "",
   "minVersion": "0.0.0",
   "latestApk": {
-    "version": "1.0.0",
+    "version": "1.0.1",
     "url": "https://github.com/jlironbahar-svg/Pro-ed/releases/download/apk-latest/ProEd.apk"
   },
   "flags": [
