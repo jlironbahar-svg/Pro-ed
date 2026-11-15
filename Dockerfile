@@ -16,7 +16,8 @@ RUN npm ci --ignore-scripts && npm rebuild better-sqlite3
 COPY shared shared
 COPY proed-app proed-app
 COPY server server
-RUN npm run build -w shared && npm run build -w proed-app && npm run build -w proed-server \
+COPY proed-admin proed-admin
+RUN npm run build -w shared && npm run build -w proed-app && npm run build:web -w proed-admin && npm run build -w proed-server \
   && npm prune --omit=dev --ignore-scripts
 
 FROM node:22-bookworm-slim
@@ -24,7 +25,8 @@ WORKDIR /app
 ENV NODE_ENV=production \
     PORT=8787 \
     DATA_DIR=/data \
-    PWA_DIR=/app/proed-app/dist
+    PWA_DIR=/app/proed-app/dist \
+    ADMIN_WEB_DIR=/app/proed-admin/dist-web
 COPY --from=build /app/package.json ./
 COPY --from=build /app/node_modules node_modules
 COPY --from=build /app/shared/package.json shared/package.json
@@ -32,6 +34,7 @@ COPY --from=build /app/shared/dist shared/dist
 COPY --from=build /app/server/package.json server/package.json
 COPY --from=build /app/server/dist server/dist
 COPY --from=build /app/proed-app/dist proed-app/dist
+COPY --from=build /app/proed-admin/dist-web proed-admin/dist-web
 COPY deploy/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN mkdir -p /data && chown -R node:node /data
 VOLUME ["/data"]

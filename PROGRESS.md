@@ -115,6 +115,7 @@ Legend: TODO / DOING NOW / DONE. Exactly one step is DOING NOW at any time.
 - GitHub Actions workflow (.github/workflows/android.yml) builds debug APKs (and signed release APKs when secrets exist), since this sandbox can't reach Maven Central reliably.
 - Hosting: Fly.io recommended (Docker, volume for SQLite, automatic HTTPS, about 2 EUR/month). fly.toml at the root. The container starts as root only to chown the volume, then runs as "node" (setpriv).
 - Fastify rejects unknown request fields (removeAdditional: false), so /api/check can never receive a password or homework.
+- After phase 10 (user request): the server also hosts the web version of ProEd Admin at /console/ (proed-admin built with `build:web`, base /console/, into dist-web). The PWA service worker ignores /console, /admin and /api.
 - Demo videos (Playwright, recorded in the VM) were sent to the user: build + tests, student app, admin app, access control. They are not committed (binary files).
 
 ## Final checklist: what you must do yourself

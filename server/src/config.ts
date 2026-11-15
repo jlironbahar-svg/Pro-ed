@@ -10,6 +10,7 @@ export interface Config {
   forceHttps: boolean;
   dataDir: string;
   pwaDir: string;
+  adminWebDir: string;
   corsOrigins: string[];
   adminJwtSecret: string;
   adminSessionHours: number;
@@ -44,6 +45,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     forceHttps: env.FORCE_HTTPS === 'true',
     dataDir: resolve(env.DATA_DIR ?? resolve(root, 'data')),
     pwaDir: resolve(env.PWA_DIR ?? resolve(root, '../proed-app/dist')),
+    adminWebDir: resolve(env.ADMIN_WEB_DIR ?? resolve(root, '../proed-admin/dist-web')),
     corsOrigins: list(env.CORS_ORIGINS ?? 'https://localhost,http://localhost,capacitor://localhost,http://localhost:5173,http://localhost:5174'),
     adminJwtSecret: env.ADMIN_JWT_SECRET ?? '',
     adminSessionHours: Number(env.ADMIN_SESSION_HOURS ?? 12),

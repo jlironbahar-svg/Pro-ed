@@ -26,8 +26,8 @@ self.addEventListener('fetch', (event) => {
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
-  // Never cache the API, the relay or downloads.
-  if (url.pathname.startsWith('/api') || url.pathname.startsWith('/relay') || url.pathname.startsWith('/download')) return;
+  // Never cache the API, the relay, downloads or the admin console.
+  if (['/api', '/admin', '/relay', '/download', '/console'].some((p) => url.pathname.startsWith(p))) return;
 
   if (req.mode === 'navigate') {
     // Network first for the page, cached shell when offline.

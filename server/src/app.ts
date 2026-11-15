@@ -80,7 +80,7 @@ export async function buildApp({ config, db }: AppDeps): Promise<FastifyInstance
   await app.register(downloadRoutes, { db, dataDir: config.dataDir });
   await app.register(adminRoutes, { db, config });
   await app.register(relayRoutes, { extraHosts: config.relayExtraHosts });
-  await app.register(pwaRoutes, { root: config.pwaDir });
+  await app.register(pwaRoutes, { root: config.pwaDir, adminRoot: config.adminWebDir });
 
   return app;
 }

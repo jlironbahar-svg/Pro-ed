@@ -14,7 +14,7 @@
   },
   "scripts": {
     "typecheck": "npm run typecheck --workspaces --if-present",
-    "build": "npm run build -w shared && npm run build -w proed-app && npm run build -w proed-admin && npm run build -w server",
+    "build": "npm run build -w shared && npm run build -w proed-app && npm run build -w proed-admin && npm run build:web -w proed-admin && npm run build -w proed-server",
     "test": "npm run test --workspaces --if-present",
     "dev:app": "npm run dev -w proed-app",
     "dev:admin": "npm run dev -w proed-admin",

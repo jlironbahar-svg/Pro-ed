@@ -11,6 +11,17 @@ This repository holds four things:
 | `server/` | Small Node.js server (Fastify + SQLite): access control, live data, admin API, Pronote relay for the PWA, and hosting of the PWA. |
 | `shared/` | Design system (colors, Inter font, components, logo) and shared types used by everything above. |
 
+### Your links
+
+Once the server is deployed (section 3), everything lives at one address, for example `https://proed-lycee-moliere.fly.dev`:
+
+| What | Link |
+| --- | --- |
+| ProEd for iPhone (PWA, "Add to Home Screen") | `https://<your-app>.fly.dev` |
+| ProEd APK download for Android | `https://<your-app>.fly.dev/download/proed.apk` (works after you upload the APK in ProEd Admin > System) |
+| ProEd Admin in a browser | `https://<your-app>.fly.dev/console/` |
+| ProEd Admin APK | from the GitHub Actions run (section 2, option B) or Android Studio; enter your server address on its login screen |
+
 Contents
 
 1. [Run everything locally](#1-run-everything-locally)
@@ -297,7 +308,7 @@ Your Pronote password stays on your phone and is never sent to the ProEd server.
 
 ## 5. Using ProEd Admin
 
-Install the admin APK on your phone (section 2), or run it on your computer with `npm run dev:admin`. Sign in with the server address, your password and the 6-digit 2FA code.
+Install the admin APK on your phone (section 2), or open `https://<your-app>.fly.dev/console/` in any browser. Sign in with the server address, your password and the 6-digit 2FA code.
 
 - **Data**: who is online right now (refreshes every 10 s), total users, active today and this week, a chart of daily active users over 30 days, recent check-ins and refused attempts.
 - **Users**: search, open a user (last seen, device, version, channel, created date), block or unblock, delete, and create invite codes with an optional first name. Give each student their own code. A code becomes tied to the first Pronote account that uses it, so it can't be shared.
