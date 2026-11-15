@@ -16,6 +16,7 @@ Update PROGRESS.md after every finished step.
 - At the end of each phase, run the TypeScript check + build (and the tests when they exist), fix all errors, then move straight on to the next phase.
 - If something can't be done here (for example building a signed APK without Android Studio), prepare everything, write the exact steps in the README, and move on.
 - Commit and push to the working branch after each phase (git push -u origin <current branch>).
+- proed-config.json at the repo root is written by ProEd Admin (serverless mode) through the GitHub API: always `git pull --rebase` before pushing, and never overwrite that file with an older version.
 
 ## Design rules (short)
 

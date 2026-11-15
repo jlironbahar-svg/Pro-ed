@@ -3,7 +3,7 @@ import { Upload } from 'lucide-react';
 import type { SystemSettings, SystemState } from '@proed/shared/core';
 import { Banner, Button, Field, Input, Segmented, Spinner, Textarea, cx } from '@proed/shared/ui';
 import { useT } from '../lib/i18n';
-import { api, ApiError, json } from '../lib/api';
+import { api, ApiError, isGithubMode, json } from '../lib/api';
 import { formatAgo, formatSize } from '../lib/format';
 import { usePolling } from '../lib/usePolling';
 import { Section } from '../components/Section';
@@ -102,6 +102,9 @@ export function SystemScreen() {
         </div>
       </Section>
 
+      {isGithubMode() ? (
+        <ApkLinkSection system={data} onSaved={setData} />
+      ) : (
       <Section title={t('system.apk')} hint={t('system.apkHint')}>
         <div className="flex flex-col gap-4">
           <p className="text-sm text-muted">
@@ -147,6 +150,54 @@ export function SystemScreen() {
           </Button>
         </div>
       </Section>
+      )}
     </div>
+  );
+}
+
+const RELEASE_URL = import.meta.env.VITE_GITHUB_REPO
+  ? `https://github.com/${import.meta.env.VITE_GITHUB_REPO}/releases/download/apk-latest/ProEd.apk`
+  : '';
+
+/** GitHub mode: the APK is published by GitHub Actions; the admin only sets the latest version and its link. */
+function ApkLinkSection({ system, onSaved }: { system: SystemSettings; onSaved: (s: SystemSettings) => void }) {
+  const { t } = useT();
+  const [version, setVersion] = useState(system.latestApk?.version ?? '');
+  const [url, setUrl] = useState(system.latestApk?.url ?? RELEASE_URL);
+  const [busy, setBusy] = useState(false);
+  const [status, setStatus] = useState<'saved' | 'error' | null>(null);
+  const valid = /^\d+(\.\d+){0,3}$/.test(version.trim()) && /^https:\/\//.test(url.trim());
+  return (
+    <Section title={t('system.apk')} hint={t('system.apkLinkHint')}>
+      <div className="flex flex-col gap-4">
+        <Field label={t('system.apkVersion')} htmlFor="apkV">
+          <Input id="apkV" value={version} onChange={(e) => setVersion(e.target.value)} placeholder="1.0.0" className="font-mono text-sm sm:w-40" />
+        </Field>
+        <Field label={t('system.apkLink')} htmlFor="apkUrl">
+          <Input id="apkUrl" value={url} onChange={(e) => setUrl(e.target.value)} inputMode="url" autoCapitalize="none" className="font-mono text-xs" />
+        </Field>
+        {status === 'saved' ? <p className="text-sm text-success">{t('common.saved')}</p> : null}
+        {status === 'error' ? <Banner tone="danger">{t('common.error')}</Banner> : null}
+        <Button
+          variant="secondary"
+          className="self-start"
+          loading={busy}
+          disabled={!valid}
+          onClick={async () => {
+            setBusy(true);
+            setStatus(null);
+            try {
+              onSaved(await api<SystemSettings>('/admin/system', { method: 'PUT', body: json({ latestApk: { version: version.trim(), url: url.trim() } }) }));
+              setStatus('saved');
+            } catch {
+              setStatus('error');
+            }
+            setBusy(false);
+          }}
+        >
+          {t('system.apkSave')}
+        </Button>
+      </div>
+    </Section>
   );
 }

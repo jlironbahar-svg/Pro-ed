@@ -7,10 +7,21 @@ export interface Settings {
   lang: Lang;
   theme: Theme;
   serverUrl: string;
+  githubRepo: string;
+  mode: 'server' | 'github';
 }
 
 const KEY = 'proed-admin-settings';
-const defaults: Settings = { lang: 'fr', theme: 'system', serverUrl: (import.meta.env.VITE_SERVER_URL ?? '').replace(/\/$/, '') };
+const SERVER = (import.meta.env.VITE_SERVER_URL ?? '').replace(/\/$/, '');
+const REPO = import.meta.env.VITE_GITHUB_REPO ?? '';
+const defaults: Settings = {
+  lang: 'fr',
+  theme: 'system',
+  serverUrl: SERVER,
+  githubRepo: REPO,
+  // The APK is built for GitHub mode (no server) unless a server address was given.
+  mode: !SERVER && REPO ? 'github' : 'server',
+};
 
 function load(): Settings {
   try {

@@ -3,7 +3,7 @@ import { ChevronRight, Copy, Plus, Search } from 'lucide-react';
 import type { AdminUser, AdminUserDetails } from '@proed/shared/core';
 import { Badge, Banner, Button, Card, Field, Input, Sheet, Spinner } from '@proed/shared/ui';
 import { useT } from '../lib/i18n';
-import { api, json } from '../lib/api';
+import { api, isGithubMode, json } from '../lib/api';
 import { formatAgo, formatDate } from '../lib/format';
 import { usePolling } from '../lib/usePolling';
 import { Empty } from '../components/Section';
@@ -54,7 +54,7 @@ export function UsersScreen() {
                 </p>
                 <p className="truncate text-xs text-muted tabular">
                   {u.label ? `${u.code} · ` : ''}
-                  {u.lastSeen ? t('users.lastSeen', { ago: formatAgo(u.lastSeen, now, lang) }) : t('users.notUsed')}
+                  {isGithubMode() ? '' : u.lastSeen ? t('users.lastSeen', { ago: formatAgo(u.lastSeen, now, lang) }) : t('users.notUsed')}
                 </p>
               </div>
               <ChevronRight size={16} className="text-faint" />
@@ -201,12 +201,16 @@ function UserSheet({ id, onClose, onChanged, formatDate }: { id: string; onClose
           </div>
           <div className="divide-y divide-line">
             <Info label={t('users.code')} value={data.code} />
-            <Info label={t('users.lastSeenLabel')} value={data.lastSeen ? formatAgo(data.lastSeen, now, lang) : t('common.never')} />
-            <Info label={t('users.device')} value={data.deviceType ? t(`device.${data.deviceType}`) : '-'} />
-            <Info label={t('users.version')} value={data.appVersion ?? '-'} />
+            {!isGithubMode() ? (
+              <>
+                <Info label={t('users.lastSeenLabel')} value={data.lastSeen ? formatAgo(data.lastSeen, now, lang) : t('common.never')} />
+                <Info label={t('users.device')} value={data.deviceType ? t(`device.${data.deviceType}`) : '-'} />
+                <Info label={t('users.version')} value={data.appVersion ?? '-'} />
+              </>
+            ) : null}
             <Info label={t('users.channel')} value={t(`channel.${data.channel}`)} />
             <Info label={t('users.created_at')} value={formatDate(data.createdAt)} />
-            <Info label={t('users.bound')} value={data.bound ? t('common.yes') : t('common.no')} />
+            {!isGithubMode() ? <Info label={t('users.bound')} value={data.bound ? t('common.yes') : t('common.no')} /> : null}
           </div>
           {data.devices.length > 0 ? (
             <div>

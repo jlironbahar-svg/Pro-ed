@@ -91,6 +91,8 @@ export interface AccessEvent {
 
 export interface DashboardData {
   now: number;
+  /** false in serverless mode: there is no live data without the server. */
+  live?: boolean;
   online: OnlineDevice[];
   totals: { users: number; activeToday: number; activeWeek: number };
   daily: { day: string; users: number }[];

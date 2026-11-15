@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "rev": 0,
+  "updatedAt": 1794746302902,
+  "salt": "oCRFlBf3oDNLB66xdcN4QH5z",
+  "iterations": 150000,
+  "graceHours": 72,
+  "state": "ACTIVE",
+  "message": "",
+  "minVersion": "0.0.0",
+  "latestApk": {
+    "version": "1.0.0",
+    "url": "https://github.com/jlironbahar-svg/Pro-ed/releases/download/apk-latest/ProEd.apk"
+  },
+  "flags": [
+    {
+      "key": "qr_login",
+      "mode": "on",
+      "description": "Login with a Pronote QR code"
+    },
+    {
+      "key": "timer",
+      "mode": "on",
+      "description": "Start/stop timer on homework"
+    },
+    {
+      "key": "today_view",
+      "mode": "on",
+      "description": "Today view with suggested order"
+    }
+  ],
+  "users": []
+}

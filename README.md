@@ -22,6 +22,31 @@ Once the server is deployed (section 3), everything lives at one address, for ex
 | ProEd Admin in a browser | `https://<your-app>.fly.dev/console/` |
 | ProEd Admin APK | from the GitHub Actions run (section 2, option B) or Android Studio; enter your server address on its login screen |
 
+### No server at all: the two APKs alone (free)
+
+The APKs published on GitHub run in **serverless mode**. ProEd Admin saves invite codes, blocks, beta, features and the ProEd status in `proed-config.json` in this repository. ProEd reads that file and talks to Pronote directly. You run nothing yourself.
+
+- Students' first names and plain invite codes never go to GitHub: they stay on your phone. The file only holds slow hashes of the codes.
+- Changes reach students' phones within about 5 minutes.
+- Live data (who is online, activity, refused attempts) and the iPhone version need the ProEd server (section 3).
+
+1. On your Android phone, download and install both APKs:
+   - ProEd Admin: <https://github.com/jlironbahar-svg/Pro-ed/releases/download/apk-latest/ProEd-Admin.apk>
+   - ProEd: <https://github.com/jlironbahar-svg/Pro-ed/releases/download/apk-latest/ProEd.apk>
+
+   If Android asks, allow your browser to install unknown apps.
+2. Create a GitHub token for ProEd Admin (once):
+   1. On github.com, open your photo > **Settings** > **Developer settings** > **Personal access tokens** > **Fine-grained tokens** > **Generate new token**.
+   2. Name: `ProEd Admin`. Expiration: the longest offered.
+   3. **Repository access**: Only select repositories > `Pro-ed`.
+   4. **Permissions** > Repository permissions > **Contents**: **Read and write**.
+   5. Click **Generate token** and copy it.
+3. Open ProEd Admin. The repository is already filled in (`jlironbahar-svg/Pro-ed`). Paste the token and sign in.
+4. In **Utilisateurs**, tap **+** to create one invite code per student, including one for yourself.
+5. Give each student the ProEd link and their code. They open ProEd, enter the code, then sign in with Pronote.
+
+Keep the token private: anyone who has it can change the access file. If it leaks, delete it on GitHub and create a new one.
+
 Contents
 
 1. [Run everything locally](#1-run-everything-locally)

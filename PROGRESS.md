@@ -1,6 +1,6 @@
 # ProEd progress
 
-Status: COMPLETE (all 10 phases done)
+Status: IN PROGRESS (phase 11 added by the user: APKs without any server)
 
 Legend: TODO / DOING NOW / DONE. Exactly one step is DOING NOW at any time.
 
@@ -88,6 +88,14 @@ Legend: TODO / DOING NOW / DONE. Exactly one step is DOING NOW at any time.
 - [DONE] 10.3 Secrets scan (.env ignored, no keys committed)
 - [DONE] 10.4 Record demo videos of the apps (Playwright) and send them
 - [DONE] 10.5 PROGRESS.md "complete" + final checklist, commit + push
+
+## Phase 11: Serverless APKs (GitHub repo as the shared store)
+- [DONE] 11.1 Shared: invite code hashing (PBKDF2) + public config type + claimsFromConfig, tests
+- [DONE] 11.2 Student app: serverless access mode (reads proed-config.json from raw.githubusercontent.com), no heartbeat
+- [DONE] 11.3 Admin app: GitHub backend (Contents API) behind the same api() calls, GitHub token login
+- [DONE] 11.4 Admin UI: serverless dashboard, APK link instead of upload, audit from commits, labels kept on the device
+- [DONE] 11.5 Initial proed-config.json, workflow env (VITE_CONFIG_URL / VITE_GITHUB_REPO), README
+- [DOING NOW] 11.6 Typecheck, build, tests, commit, run the APK workflow, verify links
 
 ## Decisions
 - Node 22, npm workspaces. Root scripts run each workspace.

@@ -4,7 +4,9 @@
 #   https://github.com/<owner>/<repo>/releases/download/apk-latest/ProEd-Admin.apk
 # Run it from the "Actions" tab ("Run workflow").
 # Optional settings (repository Settings > Secrets and variables > Actions):
-#   Variable  PROED_SERVER_URL          your server. Default: the first line of SERVER_URL, else https://<app in fly.toml>.fly.dev
+#   Variable  PROED_SERVER_URL          a ProEd server (or the first line of a SERVER_URL file).
+#             Without a server, the APKs run in serverless mode: access rules live in
+#             proed-config.json in this repository, managed by ProEd Admin with a GitHub token.
 #   Variable  PROED_ACCESS_PUBLIC_KEY   access public key printed by the setup script (optional)
 #   Secrets   PROED_KEYSTORE_BASE64, PROED_KEYSTORE_PASSWORD, PROED_KEY_ALIAS, PROED_KEY_PASSWORD
 #             (student app release signing), and the same with PROED_ADMIN_ prefix for the admin app.
@@ -42,9 +44,15 @@ jobs:
         run: |
           URL="${{ vars.PROED_SERVER_URL }}"
           if [ -z "$URL" ] && [ -f SERVER_URL ]; then URL="$(head -n 1 SERVER_URL | tr -d '[:space:]')"; fi
-          if [ -z "$URL" ]; then URL="https://$(sed -n 's/^app = "\(.*\)"$/\1/p' fly.toml).fly.dev"; fi
-          echo "Server address in the app: $URL"
-          echo "VITE_SERVER_URL=$URL" > ${{ matrix.app }}/.env.android
+          ENV=${{ matrix.app }}/.env.android
+          if [ -n "$URL" ]; then
+            echo "Server mode: $URL"
+            echo "VITE_SERVER_URL=$URL" > $ENV
+          else
+            echo "Serverless mode: access rules from proed-config.json"
+            echo "VITE_CONFIG_URL=https://raw.githubusercontent.com/${{ github.repository }}/HEAD/proed-config.json" > $ENV
+          fi
+          echo "VITE_GITHUB_REPO=${{ github.repository }}" >> $ENV
           echo "VITE_ACCESS_PUBLIC_KEY=${{ vars.PROED_ACCESS_PUBLIC_KEY }}" >> ${{ matrix.app }}/.env.android
       - name: Build web app and sync Android project
         run: npm run android:sync -w ${{ matrix.app }}

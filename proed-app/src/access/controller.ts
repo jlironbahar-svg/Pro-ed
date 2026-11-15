@@ -1,5 +1,5 @@
 import type { AccessClaims, CheckRequest, CheckResponse, DenyReason, HeartbeatResponse } from '@proed/shared/core';
-import { ACCESS_CHECK_INTERVAL_MS, HEARTBEAT_INTERVAL_MS } from '@proed/shared/core';
+import { ACCESS_CHECK_INTERVAL_MS, HEARTBEAT_INTERVAL_MS, claimsFromConfig, hashInviteCode, type PublicConfig } from '@proed/shared/core';
 import { createStore } from '../lib/store';
 import { db, randomId } from '../lib/storage';
 import { APP_VERSION, deviceType, isNative, serverUrl } from '../lib/platform';
@@ -14,6 +14,8 @@ interface Saved {
   token: string | null;
   publicKey: string | null;
   deviceId: string;
+  /** Serverless mode only: claims computed from the public config. */
+  claims?: AccessClaims | null;
 }
 
 export interface AccessState extends Saved {
@@ -27,6 +29,9 @@ export interface AccessState extends Saved {
 
 const KEY = 'access';
 const BUILD_KEY = import.meta.env.VITE_ACCESS_PUBLIC_KEY || null;
+/** Serverless mode (APK without a ProEd server): access rules come from proed-config.json on GitHub. */
+const CONFIG_URL = import.meta.env.VITE_CONFIG_URL || '';
+export const SERVERLESS = !!CONFIG_URL && !import.meta.env.VITE_SERVER_URL;
 
 export const accessStore = createStore<AccessState>({
   ready: false,
@@ -43,8 +48,8 @@ export const accessStore = createStore<AccessState>({
 setPronoteGuard(() => canCallPronote(accessStore.get().view));
 
 function persist(): void {
-  const { inviteCode, token, publicKey, deviceId } = accessStore.get();
-  void db.set(KEY, { inviteCode, token, publicKey, deviceId } satisfies Saved);
+  const { inviteCode, token, publicKey, deviceId, claims } = accessStore.get();
+  void db.set(KEY, { inviteCode, token, publicKey, deviceId, claims: SERVERLESS ? claims : null } satisfies Saved);
 }
 
 function computeView(claims: AccessClaims | null): AccessView | null {
@@ -62,7 +67,8 @@ export async function loadAccess(): Promise<void> {
   const deviceId = saved?.deviceId || randomId();
   const publicKey = BUILD_KEY ?? saved?.publicKey ?? null;
   let claims: AccessClaims | null = null;
-  if (saved?.token && publicKey) claims = await verifyToken(saved.token, publicKey);
+  if (SERVERLESS) claims = saved?.claims ?? null;
+  else if (saved?.token && publicKey) claims = await verifyToken(saved.token, publicKey);
   accessStore.set((s) => ({
     ...s,
     ready: true,
@@ -90,6 +96,20 @@ export async function runCheck(code?: string): Promise<CheckResult> {
   if (!inviteCode) return { status: 'denied', reason: 'unknown_code' };
   accessStore.set((s) => ({ ...s, checking: true }));
   try {
+    if (SERVERLESS) {
+      const res = await fetch(`${CONFIG_URL}?t=${Date.now()}`, { cache: 'no-store' });
+      if (!res.ok) throw new Error(`config ${res.status}`);
+      const config = (await res.json()) as PublicConfig;
+      const claims = claimsFromConfig(config, await hashInviteCode(inviteCode, config.salt, config.iterations), Date.now());
+      if (!claims.allowed && claims.reason === 'unknown_code' && code) {
+        accessStore.set((s) => ({ ...s, checking: false, offline: false }));
+        return { status: 'denied', reason: 'unknown_code' };
+      }
+      accessStore.set((s) => ({ ...s, inviteCode, token: null, checking: false, offline: false }));
+      applyClaims(claims);
+      persist();
+      return claims.allowed ? { status: 'ok' } : { status: 'denied', reason: claims.reason ?? 'blocked' };
+    }
     const body: CheckRequest = {
       inviteCode,
       deviceId: state.deviceId,
@@ -138,7 +158,7 @@ export function forgetInviteCode(): void {
 
 async function heartbeat(): Promise<void> {
   const { token, deviceId, view } = accessStore.get();
-  if (!token || view?.kind !== 'ok' || document.visibilityState !== 'visible') return;
+  if (SERVERLESS || !token || view?.kind !== 'ok' || document.visibilityState !== 'visible') return;
   try {
     const res = await fetch(serverUrl('/api/heartbeat'), {
       method: 'POST',

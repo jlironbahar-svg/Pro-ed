@@ -58,3 +58,44 @@ describe('feature flags', () => {
     expect(resolveFlags(flags, 'beta')).toEqual({ a: true, b: true, c: false });
   });
 });
+
+import { claimsFromConfig, hashInviteCode, normalizeInviteCode, type PublicConfig } from './invite';
+
+describe('serverless invite codes', () => {
+  const config = (users: PublicConfig['users']): PublicConfig => ({
+    version: 1,
+    rev: 4,
+    updatedAt: 0,
+    salt: 'salt-1',
+    iterations: 1000,
+    graceHours: 72,
+    state: 'RECOVERY',
+    message: 'Maintenance',
+    minVersion: '1.0.0',
+    latestApk: null,
+    flags: [{ key: 'timer', mode: 'beta', description: '' }],
+    users,
+  });
+
+  it('normalizes and hashes codes the same way everywhere', async () => {
+    expect(normalizeInviteCode('ab cd-23 45')).toBe('ABCD2345');
+    const a = await hashInviteCode('abcd-2345', 'salt-1', 1000);
+    expect(a).toBe(await hashInviteCode('ABCD2345', 'salt-1', 1000));
+    expect(a).toMatch(/^[a-f0-9]{64}$/);
+    expect(a).not.toBe(await hashInviteCode('ABCD2345', 'salt-2', 1000));
+  });
+
+  it('builds claims from the public config', async () => {
+    const hash = await hashInviteCode('ABCD2345', 'salt-1', 1000);
+    const now = 1_800_000_000_000;
+    const ok = claimsFromConfig(config([{ id: 'u1', codeHash: hash, channel: 'beta', blocked: false, createdAt: 0 }]), hash, now);
+    expect(ok).toMatchObject({ allowed: true, channel: 'beta', state: 'RECOVERY', message: 'Maintenance', flags: { timer: true }, rev: 4, sub: 'u1' });
+    expect(ok.exp! - ok.iat!).toBe(72 * 3600);
+    expect(claimsFromConfig(config([{ id: 'u1', codeHash: hash, channel: 'normal', blocked: true, createdAt: 0 }]), hash, now)).toMatchObject({
+      allowed: false,
+      reason: 'blocked',
+      flags: {},
+    });
+    expect(claimsFromConfig(config([]), hash, now)).toMatchObject({ allowed: false, reason: 'unknown_code' });
+  });
+});

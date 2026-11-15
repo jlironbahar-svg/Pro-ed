@@ -7,6 +7,8 @@ interface ImportMetaEnv {
   readonly VITE_SERVER_URL?: string;
   /** Optional SPKI public key (base64) to verify access tokens. */
   readonly VITE_ACCESS_PUBLIC_KEY?: string;
+  /** Serverless APK: URL of proed-config.json (raw.githubusercontent.com). */
+  readonly VITE_CONFIG_URL?: string;
 }
 
 interface Navigator {

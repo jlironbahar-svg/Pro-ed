@@ -3,7 +3,7 @@ import { LogOut } from 'lucide-react';
 import { Button, Card, Logo, Segmented, useStore } from '@proed/shared/ui';
 import { useT } from '../lib/i18n';
 import { settingsStore, updateSettings, type Theme } from '../lib/settings';
-import { logout } from '../lib/api';
+import { isGithubMode, logout } from '../lib/api';
 
 export function SettingsScreen() {
   const { t } = useT();
@@ -38,8 +38,8 @@ export function SettingsScreen() {
           />
         </div>
         <div className="flex items-center justify-between gap-4 px-4 py-3">
-          <span className="text-sm font-medium">{t('settings.server')}</span>
-          <span className="truncate font-mono text-xs text-muted">{settings.serverUrl || location.origin}</span>
+          <span className="text-sm font-medium">{isGithubMode() ? t('settings.repo') : t('settings.server')}</span>
+          <span className="truncate font-mono text-xs text-muted">{isGithubMode() ? settings.githubRepo : settings.serverUrl || location.origin}</span>
         </div>
       </Card>
       <div>
@@ -54,7 +54,7 @@ export function SettingsScreen() {
         >
           {t('settings.logout')}
         </Button>
-        <p className="mt-2 text-xs text-muted">{t('settings.logoutAll')}</p>
+        <p className="mt-2 text-xs text-muted">{isGithubMode() ? t('settings.logoutLocal') : t('settings.logoutAll')}</p>
       </div>
       <footer className="mt-4 flex flex-col items-center gap-2 text-xs text-faint">
         <Logo size="sm" suffix="Admin" />

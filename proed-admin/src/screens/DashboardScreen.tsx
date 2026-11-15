@@ -1,4 +1,4 @@
-import { ADMIN_REFRESH_MS, type AccessEvent, type DashboardData } from '@proed/shared/core';
+import { ADMIN_REFRESH_MS, type AccessEvent, type AdminUser, type DashboardData, type SystemSettings } from '@proed/shared/core';
 import { Banner, Spinner } from '@proed/shared/ui';
 import { useT, type TKey } from '../lib/i18n';
 import { api } from '../lib/api';
@@ -14,6 +14,8 @@ export function DashboardScreen() {
   if (!data) {
     return error ? <Banner tone="danger">{t('common.error')}</Banner> : <div className="flex justify-center py-16 text-muted"><Spinner /></div>;
   }
+
+  if (data.live === false) return <ServerlessDashboard />;
 
   const eventRow = (e: AccessEvent) => (
     <Row
@@ -67,6 +69,25 @@ export function DashboardScreen() {
         <Section title={t('dash.denied')} flush>
           {data.recentDenied.length === 0 ? <Empty>{t('dash.none')}</Empty> : data.recentDenied.slice(0, 10).map(eventRow)}
         </Section>
+      </div>
+    </div>
+  );
+}
+
+/** GitHub mode: no live data, only what the access file holds. */
+function ServerlessDashboard() {
+  const { t } = useT();
+  const users = usePolling(() => api<AdminUser[]>('/admin/users'), 60_000);
+  const system = usePolling(() => api<SystemSettings>('/admin/system'), 60_000);
+  const list = users.data ?? [];
+  return (
+    <div className="flex flex-col gap-6">
+      <Banner tone="info">{t('dash.serverless')}</Banner>
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+        <Stat label={t('dash.users')} value={users.data ? list.length : '-'} />
+        <Stat label={t('dash.blocked')} value={users.data ? list.filter((u) => u.blocked).length : '-'} />
+        <Stat label={t('dash.betaUsers')} value={users.data ? list.filter((u) => u.channel === 'beta').length : '-'} />
+        <Stat label={t('dash.state')} value={system.data ? t(`system.${system.data.state}`) : '-'} />
       </div>
     </div>
   );
