@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "rev": 8,
-  "updatedAt": 1794756487510,
+  "rev": 9,
+  "updatedAt": 1794756498016,
   "salt": "oCRFlBf3oDNLB66xdcN4QH5z",
   "iterations": 150000,
   "graceHours": 72,
@@ -25,7 +25,7 @@
     },
     {
       "key": "today_view",
-      "mode": "on",
+      "mode": "off",
       "description": "Today view with suggested order"
     }
   ],
