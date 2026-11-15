@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "rev": 5,
-  "updatedAt": 1794756189458,
+  "rev": 6,
+  "updatedAt": 1794756444864,
   "salt": "oCRFlBf3oDNLB66xdcN4QH5z",
   "iterations": 150000,
   "graceHours": 72,
@@ -29,5 +29,13 @@
       "description": "Today view with suggested order"
     }
   ],
-  "users": []
+  "users": [
+    {
+      "id": "4dbdf650-02e4-421a-a2af-960d600aa618",
+      "codeHash": "0f6231def92df7f31ea791e5dfa5a410cd8c8f51143acb9799af5378c7a49167",
+      "channel": "normal",
+      "blocked": false,
+      "createdAt": 1794756443749
+    }
+  ]
 }
