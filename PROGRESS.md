@@ -1,6 +1,6 @@
 # ProEd progress
 
-Status: IN PROGRESS (phase 11 added by the user: APKs without any server)
+Status: COMPLETE (phases 1-11 done)
 
 Legend: TODO / DOING NOW / DONE. Exactly one step is DOING NOW at any time.
 
@@ -95,7 +95,7 @@ Legend: TODO / DOING NOW / DONE. Exactly one step is DOING NOW at any time.
 - [DONE] 11.3 Admin app: GitHub backend (Contents API) behind the same api() calls, GitHub token login
 - [DONE] 11.4 Admin UI: serverless dashboard, APK link instead of upload, audit from commits, labels kept on the device
 - [DONE] 11.5 Initial proed-config.json, workflow env (VITE_CONFIG_URL / VITE_GITHUB_REPO), README
-- [DOING NOW] 11.6 Typecheck, build, tests, commit, run the APK workflow, verify links
+- [DONE] 11.6 Typecheck, build, tests, commit, run the APK workflow, verify links
 
 ## Decisions
 - Node 22, npm workspaces. Root scripts run each workspace.
@@ -125,6 +125,7 @@ Legend: TODO / DOING NOW / DONE. Exactly one step is DOING NOW at any time.
 - Fastify rejects unknown request fields (removeAdditional: false), so /api/check can never receive a password or homework.
 - After phase 10 (user request): the server also hosts the web version of ProEd Admin at /console/ (proed-admin built with `build:web`, base /console/, into dist-web). The PWA service worker ignores /console, /admin and /api.
 - APKs are built by GitHub Actions and published to the release "apk-latest": https://github.com/jlironbahar-svg/Pro-ed/releases/download/apk-latest/ProEd.apk and .../ProEd-Admin.apk (first build OK, run 43699979729). They are built for the server https://proed-jlb.fly.dev (app name in fly.toml). Debug-signed until the keystore secrets are added.
+- Phase 11: the published APKs run without any server. ProEd Admin (GitHub mode, fine-grained token with Contents read/write) writes proed-config.json; ProEd reads it from raw.githubusercontent.com/<repo>/HEAD/proed-config.json. Names and plain codes stay on the admin phone; codes are PBKDF2 hashes (150k iterations). No live data in this mode. Tested end to end with a mocked GitHub API.
 - Demo videos (Playwright, recorded in the VM) were sent to the user: build + tests, student app, admin app, access control. They are not committed (binary files).
 
 ## Final checklist: what you must do yourself
