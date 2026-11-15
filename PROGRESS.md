@@ -76,14 +76,14 @@ Legend: TODO / DOING NOW / DONE. Exactly one step is DOING NOW at any time.
 - [DONE] 8.5 Run all tests, commit + push
 
 ## Phase 9: Docs
-- [DOING NOW] 9.1 README: overview + run locally
-- [TODO] 9.2 README: debug and signed APKs, keystore safety
-- [TODO] 9.3 README: deploy server + PWA with HTTPS (recommended host)
-- [TODO] 9.4 README: student guide (APK install, iPhone home screen)
-- [TODO] 9.5 Commit + push
+- [DONE] 9.1 README: overview + run locally
+- [DONE] 9.2 README: debug and signed APKs, keystore safety
+- [DONE] 9.3 README: deploy server + PWA with HTTPS (recommended host)
+- [DONE] 9.4 README: student guide (APK install, iPhone home screen)
+- [DONE] 9.5 Commit + push
 
 ## Phase 10: Final check
-- [TODO] 10.1 Build every package, run tests
+- [DOING NOW] 10.1 Build every package, run tests
 - [TODO] 10.2 Emoji scan and cleanup
 - [TODO] 10.3 Secrets scan (.env ignored, no keys committed)
 - [TODO] 10.4 Record demo videos of the apps (Playwright) and send them
