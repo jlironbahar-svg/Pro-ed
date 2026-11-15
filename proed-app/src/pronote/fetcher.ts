@@ -12,6 +12,16 @@ export class NetworkError extends Error {
   }
 }
 
+/**
+ * Compatibility fix for Pronote 2026: the login page now writes `Start ({...});} catch`, with a
+ * semicolon that pawnote 1.6.2 does not expect (it looks for `)} catch`), so every login failed
+ * with "page unavailable". We remove that semicolon before pawnote reads the page.
+ */
+export function fixPronoteContent(url: URL, content: string): string {
+  if (!/\.html$/i.test(url.pathname)) return content;
+  return content.replace(/(Start\s*\(\s*\{[^}]*\}\s*\))\s*;\s*\}/, '$1}');
+}
+
 function plainHeaders(h: FetcherRequest['headers']): Record<string, string> {
   const out: Record<string, string> = {};
   if (!h) return out;
@@ -45,7 +55,7 @@ const relayFetcher: Fetcher = async (req) => {
   if (res.status === 403) throw new NetworkError('blocked');
   if (!res.ok) throw new NetworkError('relay');
   const data = (await res.json()) as { status: number; headers: Record<string, string>; body: string };
-  return { status: data.status, content: data.body, headers: data.headers };
+  return { status: data.status, content: fixPronoteContent(req.url, data.body), headers: data.headers };
 };
 
 /** Android APK: native HTTP through CapacitorHttp, no CORS, no relay. */
@@ -62,7 +72,7 @@ const nativeFetcher: Fetcher = async (req) => {
       readTimeout: 30_000,
     });
     const content = typeof res.data === 'string' ? res.data : JSON.stringify(res.data);
-    return { status: res.status, content, headers: res.headers };
+    return { status: res.status, content: fixPronoteContent(req.url, content), headers: res.headers };
   } catch {
     throw new NetworkError('offline');
   }

@@ -1,6 +1,8 @@
 import {
   AccountKind,
+  BadCredentialsError,
   SecurityError,
+  instance,
   assignmentStatus,
   assignmentsFromIntervals,
   createSessionHandle,
@@ -94,6 +96,11 @@ export async function loginWithPassword(url: string, username: string, password:
     return { status: 'ok', session: await persist(handle, refresh, uuid) };
   } catch (e) {
     if (e instanceof SecurityError) return { status: 'security', pending: { handle, modal: e.handle } };
+    // Schools that sign in through an ENT: students often have no Pronote password. Point them to the QR code.
+    if (e instanceof BadCredentialsError) {
+      const info = await instance(url, getFetcher()).catch(() => null);
+      if (info?.casURL) throw new AppError('error.badCredentialsEnt');
+    }
     throw toAppError(e, 'credentials');
   }
 }

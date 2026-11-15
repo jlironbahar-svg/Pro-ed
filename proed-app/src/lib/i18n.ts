@@ -42,6 +42,7 @@ const fr = {
   'login.back': 'Retour',
 
   'error.badCredentials': 'Identifiant ou mot de passe incorrect.',
+  'error.badCredentialsEnt': 'Identifiant ou mot de passe incorrect. Ton établissement se connecte par un ENT : utilise plutôt « Se connecter avec un QR code ».',
   'error.network': 'Pas de connexion. Vérifie ton réseau.',
   'error.unreachable': 'Impossible de joindre ce serveur Pronote.',
   'error.suspended': 'Trop de tentatives. Réessaie dans quelques minutes.',
@@ -185,6 +186,7 @@ const en: Record<Key, string> = {
   'login.back': 'Back',
 
   'error.badCredentials': 'Wrong username or password.',
+  'error.badCredentialsEnt': 'Wrong username or password. Your school signs in through an ENT: use "Sign in with a QR code" instead.',
   'error.network': 'No connection. Check your network.',
   'error.unreachable': "Couldn't reach this Pronote server.",
   'error.suspended': 'Too many attempts. Try again in a few minutes.',
