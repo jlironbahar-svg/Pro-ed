@@ -1,0 +1,10 @@
+@import "tailwindcss";
+@import "@proed/shared/theme.css";
+
+@source "./";
+
+html,
+body,
+#root {
+  min-height: 100%;
+}

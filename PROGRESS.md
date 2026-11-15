@@ -15,19 +15,19 @@ Legend: TODO / DOING NOW / DONE. Exactly one step is DOING NOW at any time.
 - [DONE] 1.8 Install deps, typecheck shared, commit + push
 
 ## Phase 2: ProEd app core
-- [DOING NOW] 2.1 Scaffold /proed-app (Vite, React, TS, Tailwind using shared preset)
-- [TODO] 2.2 Install pawnote, read README + .d.ts, write notes in PROGRESS.md decisions
-- [TODO] 2.3 i18n (FR default, EN), theme (light/dark/system), settings store (idb-keyval)
-- [TODO] 2.4 Pronote layer: fetcher (relay for web, CapacitorHttp for native), login (credentials, QR code), session save/restore, homework fetch
-- [TODO] 2.5 Estimates engine (rules + per-subject average from timers) and timer store
-- [TODO] 2.6 Login screen (school search / URL, username, password, QR code)
-- [TODO] 2.7 Homework list screen (sorted, attachments, done, edit estimate, timer, pull to refresh)
-- [TODO] 2.8 Today view (summary + suggested order)
-- [TODO] 2.9 Settings screen, offline cache, service worker + manifest
-- [TODO] 2.10 Typecheck + build, commit + push
+- [DONE] 2.1 Scaffold /proed-app (Vite, React, TS, Tailwind using shared preset)
+- [DONE] 2.2 Install pawnote, read README + .d.ts, write notes in PROGRESS.md decisions
+- [DONE] 2.3 i18n (FR default, EN), theme (light/dark/system), settings store (idb-keyval)
+- [DONE] 2.4 Pronote layer: fetcher (relay for web, CapacitorHttp for native), login (credentials, QR code), session save/restore, homework fetch
+- [DONE] 2.5 Estimates engine (rules + per-subject average from timers) and timer store
+- [DONE] 2.6 Login screen (school search / URL, username, password, QR code)
+- [DONE] 2.7 Homework list screen (sorted, attachments, done, edit estimate, timer, pull to refresh)
+- [DONE] 2.8 Today view (summary + suggested order)
+- [DONE] 2.9 Settings screen, offline cache, service worker + manifest
+- [DONE] 2.10 Typecheck + build, commit + push
 
 ## Phase 3: Server part 1
-- [TODO] 3.1 Scaffold /server (Fastify, TS, env config, logger with redaction)
+- [DOING NOW] 3.1 Scaffold /server (Fastify, TS, env config, logger with redaction)
 - [TODO] 3.2 Pronote relay /relay (no body/secret logging, HTTPS-only target, host allowlist)
 - [TODO] 3.3 Serve PWA build (static, SPA fallback, cache headers for sw)
 - [TODO] 3.4 Dockerfile + .env.example
@@ -92,3 +92,20 @@ Legend: TODO / DOING NOW / DONE. Exactly one step is DOING NOW at any time.
 ## Decisions
 - Node 22, npm workspaces. Root scripts run each workspace.
 - Shared package is consumed as TypeScript source (no build step) via Vite + TS path resolution.
+- pawnote 1.6.2 notes (read from dist/index.d.mts):
+  - createSessionHandle(fetcher) ; loginCredentials(session, {url, kind: AccountKind.STUDENT, username, password, deviceUUID, navigatorIdentifier?}) -> RefreshInformation {url, token, username, kind, navigatorIdentifier}
+  - loginToken(session, {url, kind, username, token, deviceUUID, navigatorIdentifier}) ; the token rotates: save the new one after every login.
+  - loginQrCode(session, {deviceUUID, pin, qr}) where qr is the parsed QR JSON {jeton, login, url}.
+  - SecurityError(handle) for 2FA: handle.shouldEnterPIN / shouldEnterSource handled with securityCheckPIN + securitySave + finishLoginManually; custom password / custom 2FA setup -> ask the student to do it on Pronote first.
+  - assignmentsFromIntervals(session, start, end) -> Assignment {id, subject{name}, description (HTML), deadline: Date, done, attachments[{kind 0 link/1 file, name, url}], length?}. session.instance.lastDate caps the range.
+  - assignmentStatus(session, id, done) syncs the done state (best effort).
+  - geolocation({latitude, longitude}) POSTs to www.index-education.com/swie/geoloc.php. School search = geocode city/postcode with api-adresse.data.gouv.fr, then geolocation().
+  - Fetcher: (req {url: URL, method, content, headers, redirect}) => {status, content, headers}. Pawnote sends "Cookie: appliMobile=1" and a User-Agent: browsers forbid these headers, so the web fetcher sends them as x-pe-cookie / x-pe-user-agent and the relay restores them.
+- Web relay protocol: POST /relay with JSON {url, method, headers, body, redirect} -> JSON {status, headers, body}. Host allowlist: *.index-education.net, www.index-education.com, plus RELAY_EXTRA_HOSTS.
+- APK: explicit CapacitorHttp.request in a custom fetcher (JSON responses come back parsed, re-stringified).
+- @capacitor/core + @capacitor/preferences installed in phase 2 (needed by shared code); CLI/android added in phase 4.
+- QR scanning with jsqr (camera via getUserMedia, photo fallback).
+- Estimates: rule = base by type (exercise 25, revision 45, reading 30, project 60) x subject factor x length factor, or Pronote's own length when the teacher set one. Per-subject factor = shrunk mean of (real time / rule estimate) from timer data, clamped 0.4-2.5. Rounded to 5 min.
+- Today view = not-done homework due today or by the next school day (Fri/Sat -> through Monday). Order: due date, then shortest.
+- Access JWT: ES256. App verifies offline with WebCrypto against a pinned public key (from VITE_ACCESS_PUBLIC_KEY at build time, else the key returned by the first successful check).
+- Invite code binds to the first Pronote username hash it is used with; other usernames get "code_in_use".
