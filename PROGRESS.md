@@ -112,3 +112,6 @@ Legend: TODO / DOING NOW / DONE. Exactly one step is DOING NOW at any time.
 - Android: Capacitor 8 (minSdk 24, target 36). appId app.proed.student. CapacitorHttp enabled (native fetch). allowBackup=false so the Pronote token is not copied to cloud backups.
 - Android build here is blocked: Maven Central answers HTTP 429 through this sandbox's proxy. APKs are built by the user (Android Studio or gradlew) or by the GitHub Actions workflow added in phase 9.
 - Version name/code come from each app's package.json (scripts/android-gradle.mjs). Release signing reads android/keystore.properties or PROED_KEYSTORE_* env vars.
+- GitHub Actions workflow (.github/workflows/android.yml) builds debug APKs (and signed release APKs when secrets exist), since this sandbox can't reach Maven Central reliably.
+- Hosting: Fly.io recommended (Docker, volume for SQLite, automatic HTTPS, about 2 EUR/month). fly.toml at the root. The container starts as root only to chown the volume, then runs as "node" (setpriv).
+- Fastify rejects unknown request fields (removeAdditional: false), so /api/check can never receive a password or homework.

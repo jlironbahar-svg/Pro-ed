@@ -1,0 +1,37 @@
+# Fly.io config for the ProEd server + PWA. See README, "Deploy the server".
+# Change "app" to a unique name (it becomes https://<app>.fly.dev).
+app = "proed-change-me"
+primary_region = "cdg"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  PORT = "8787"
+  DATA_DIR = "/data"
+  TRUST_PROXY = "true"
+  FORCE_HTTPS = "true"
+  TIME_ZONE = "Europe/Paris"
+  ACCESS_GRACE_HOURS = "72"
+
+[[mounts]]
+  source = "proed_data"
+  destination = "/data"
+
+[http_service]
+  internal_port = 8787
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+
+  [[http_service.checks]]
+    grace_period = "10s"
+    interval = "30s"
+    method = "GET"
+    path = "/healthz"
+    timeout = "5s"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "256mb"

@@ -32,8 +32,10 @@ COPY --from=build /app/shared/dist shared/dist
 COPY --from=build /app/server/package.json server/package.json
 COPY --from=build /app/server/dist server/dist
 COPY --from=build /app/proed-app/dist proed-app/dist
+COPY deploy/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN mkdir -p /data && chown -R node:node /data
-USER node
 VOLUME ["/data"]
 EXPOSE 8787
+# Starts as root only to fix the volume owner, then runs the server as "node".
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 CMD ["node", "server/dist/index.js"]

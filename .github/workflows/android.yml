@@ -1,0 +1,69 @@
+# Builds the ProEd and ProEd Admin APKs on GitHub (no Android Studio needed).
+# Run it from the "Actions" tab ("Run workflow"), then download the APKs from the run's "Artifacts".
+# Optional settings (repository Settings > Secrets and variables > Actions):
+#   Variable  PROED_SERVER_URL          your server, e.g. https://proed-xxx.fly.dev
+#   Variable  PROED_ACCESS_PUBLIC_KEY   access public key printed by the setup script (optional)
+#   Secrets   PROED_KEYSTORE_BASE64, PROED_KEYSTORE_PASSWORD, PROED_KEY_ALIAS, PROED_KEY_PASSWORD
+#             (student app release signing), and the same with PROED_ADMIN_ prefix for the admin app.
+name: Android APKs
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ['v*']
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - app: proed-app
+            name: ProEd
+            secret_prefix: PROED
+          - app: proed-admin
+            name: ProEd-Admin
+            secret_prefix: PROED_ADMIN
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - run: npm ci
+      - name: Write .env.android
+        run: |
+          echo "VITE_SERVER_URL=${{ vars.PROED_SERVER_URL }}" > ${{ matrix.app }}/.env.android
+          echo "VITE_ACCESS_PUBLIC_KEY=${{ vars.PROED_ACCESS_PUBLIC_KEY }}" >> ${{ matrix.app }}/.env.android
+      - name: Build web app and sync Android project
+        run: npm run android:sync -w ${{ matrix.app }}
+      - name: Debug APK
+        working-directory: ${{ matrix.app }}/android
+        run: ./gradlew assembleDebug --no-daemon
+      - name: Release APK (only when the signing secrets exist)
+        working-directory: ${{ matrix.app }}/android
+        env:
+          KEYSTORE_BASE64: ${{ secrets[format('{0}_KEYSTORE_BASE64', matrix.secret_prefix)] }}
+          PROED_KEYSTORE_PASSWORD: ${{ secrets[format('{0}_KEYSTORE_PASSWORD', matrix.secret_prefix)] }}
+          PROED_KEY_ALIAS: ${{ secrets[format('{0}_KEY_ALIAS', matrix.secret_prefix)] }}
+          PROED_KEY_PASSWORD: ${{ secrets[format('{0}_KEY_PASSWORD', matrix.secret_prefix)] }}
+        run: |
+          if [ -z "$KEYSTORE_BASE64" ]; then echo "No signing secrets, skipping release build."; exit 0; fi
+          echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.jks"
+          PROED_KEYSTORE_FILE="$RUNNER_TEMP/release.jks" ./gradlew assembleRelease --no-daemon
+          rm -f "$RUNNER_TEMP/release.jks"
+      - name: Collect APKs
+        run: |
+          mkdir -p out
+          cp ${{ matrix.app }}/android/app/build/outputs/apk/debug/app-debug.apk out/${{ matrix.name }}-debug.apk
+          if [ -f ${{ matrix.app }}/android/app/build/outputs/apk/release/app-release.apk ]; then
+            cp ${{ matrix.app }}/android/app/build/outputs/apk/release/app-release.apk out/${{ matrix.name }}-release.apk
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.name }}-apk
+          path: out/*.apk
