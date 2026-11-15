@@ -1,0 +1,32 @@
+node_modules/
+dist/
+build/
+coverage/
+*.log
+.DS_Store
+
+# secrets
+.env
+.env.*
+!.env.example
+*.keystore
+*.jks
+keystore.properties
+
+# server runtime data
+server/data/
+
+# android build outputs
+**/android/app/build/
+**/android/build/
+**/android/.gradle/
+**/android/local.properties
+**/android/app/release/
+**/android/capacitor-cordova-android-plugins/build/
+*.apk
+*.aab
+!server/.gitkeep
+
+# misc
+.vite/
+*.tsbuildinfo

@@ -1,0 +1,28 @@
+{
+  "name": "proed-monorepo",
+  "private": true,
+  "version": "1.0.0",
+  "description": "ProEd: homework planner for Pronote students, with access server and admin app.",
+  "workspaces": [
+    "shared",
+    "proed-app",
+    "proed-admin",
+    "server"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "build": "npm run build -w shared && npm run build -w proed-app && npm run build -w proed-admin && npm run build -w server",
+    "test": "npm run test --workspaces --if-present",
+    "dev:app": "npm run dev -w proed-app",
+    "dev:admin": "npm run dev -w proed-admin",
+    "dev:server": "npm run dev -w server",
+    "setup:server": "npm run setup -w server",
+    "postinstall": "npm run build -w shared"
+  },
+  "devDependencies": {
+    "typescript": "5.9.3"
+  }
+}

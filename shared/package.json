@@ -1,0 +1,30 @@
+{
+  "name": "@proed/shared",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "ProEd design system (tokens, styles, React components), shared types and pure logic.",
+  "exports": {
+    "./core": {
+      "types": "./dist/core/index.d.ts",
+      "default": "./dist/core/index.js"
+    },
+    "./ui": "./src/ui/index.ts",
+    "./theme.css": "./src/styles/theme.css",
+    "./assets/*": "./assets/*"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.core.json",
+    "typecheck": "tsc -p tsconfig.core.json --noEmit && tsc -p tsconfig.json --noEmit"
+  },
+  "peerDependencies": {
+    "lucide-react": ">=1.0.0",
+    "react": ">=19.0.0"
+  },
+  "dependencies": {
+    "@fontsource-variable/inter": "5.3.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.0"
+  }
+}
