@@ -54,6 +54,13 @@ jobs:
           fi
           echo "VITE_GITHUB_REPO=${{ github.repository }}" >> $ENV
           echo "VITE_ACCESS_PUBLIC_KEY=${{ vars.PROED_ACCESS_PUBLIC_KEY }}" >> ${{ matrix.app }}/.env.android
+      # Same debug signing key on every build, so a new APK installs over the previous one.
+      # (Kept in the Actions cache: it expires after 7 days without any build.)
+      - name: Reuse the debug signing key
+        uses: actions/cache@v4
+        with:
+          path: ~/.android/debug.keystore
+          key: debug-keystore-${{ matrix.app }}-v1
       - name: Build web app and sync Android project
         run: npm run android:sync -w ${{ matrix.app }}
       - name: Debug APK

@@ -5,6 +5,18 @@ import { isNative, serverUrl } from '../lib/platform';
 export type Fetcher = NonNullable<Parameters<typeof createSessionHandle>[0]>;
 type FetcherRequest = Parameters<Fetcher>[0];
 
+let lastExchange = '';
+
+/** Last Pronote request, for the technical detail shown under login errors. No bodies, no query strings. */
+export function lastPronoteExchange(): string {
+  return lastExchange;
+}
+
+function remember(req: FetcherRequest, status: number | string, size?: number): void {
+  const path = req.url.pathname.split('/').slice(-2).join('/');
+  lastExchange = `${req.method ?? 'GET'} ${req.url.hostname}/…/${path} -> ${status}${size !== undefined ? ` (${size} o)` : ''}`;
+}
+
 /** Thrown when the network or the relay fails (not a Pronote error). */
 export class NetworkError extends Error {
   constructor(public readonly code: 'offline' | 'relay' | 'blocked' | 'rate_limited') {
@@ -49,12 +61,15 @@ const relayFetcher: Fetcher = async (req) => {
       }),
     });
   } catch {
+    remember(req, 'relay unreachable');
     throw new NetworkError('offline');
   }
+  if (!res.ok) remember(req, `relay ${res.status}`);
   if (res.status === 429) throw new NetworkError('rate_limited');
   if (res.status === 403) throw new NetworkError('blocked');
   if (!res.ok) throw new NetworkError('relay');
   const data = (await res.json()) as { status: number; headers: Record<string, string>; body: string };
+  remember(req, data.status, data.body.length);
   return { status: data.status, content: fixPronoteContent(req.url, data.body), headers: data.headers };
 };
 
@@ -70,8 +85,12 @@ const nativeFetcher: Fetcher = async (req) => {
       disableRedirects: req.redirect === 'manual',
       connectTimeout: 15_000,
       readTimeout: 30_000,
+    }).catch((e: unknown) => {
+      remember(req, `native error: ${e instanceof Error ? e.message.slice(0, 80) : 'unknown'}`);
+      throw e;
     });
     const content = typeof res.data === 'string' ? res.data : JSON.stringify(res.data);
+    remember(req, res.status, content.length);
     return { status: res.status, content: fixPronoteContent(req.url, content), headers: res.headers };
   } catch {
     throw new NetworkError('offline');

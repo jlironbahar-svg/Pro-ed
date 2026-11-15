@@ -16,6 +16,7 @@ import {
   type PendingSecurity,
 } from '../pronote/client';
 import { AppError, toAppError } from '../pronote/errors';
+import { APP_VERSION } from '../lib/platform';
 
 type Step = { kind: 'school' } | { kind: 'credentials'; url: string; name: string } | { kind: 'security'; pending: PendingSecurity };
 
@@ -60,6 +61,7 @@ export function LoginScreen() {
             <p className="mt-2 text-center text-xs text-muted">{t('login.entHint')}</p>
           </div>
         ) : null}
+        <p className="mt-10 text-center text-xs text-faint tabular">{t('settings.version', { v: APP_VERSION })}</p>
       </main>
 
       <Sheet open={qrOpen} onClose={() => setQrOpen(false)} title={t('login.qrTitle')} closeLabel={t('login.back')}>
@@ -73,6 +75,17 @@ export function LoginScreen() {
         ) : null}
       </Sheet>
     </div>
+  );
+}
+
+function ErrorBanner({ error }: { error: AppError | null }) {
+  const { t } = useT();
+  if (!error) return null;
+  return (
+    <Banner tone="danger">
+      {t(error.key)}
+      {error.detail ? <span className="mt-1 block font-mono text-[11px] break-all text-faint">{error.detail}</span> : null}
+    </Banner>
   );
 }
 
@@ -212,7 +225,7 @@ function CredentialsStep({
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<TKey | null>(null);
+  const [error, setError] = useState<AppError | null>(null);
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
@@ -221,7 +234,7 @@ function CredentialsStep({
     try {
       onResult(await loginWithPassword(url, username, password));
     } catch (err) {
-      setError(err instanceof AppError ? err.key : 'error.generic');
+      setError(toAppError(err, 'credentials'));
       setBusy(false);
     }
   };
@@ -243,7 +256,7 @@ function CredentialsStep({
       <Field label={t('login.password')} htmlFor="pn-pass">
         <Input id="pn-pass" type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" required />
       </Field>
-      {error ? <Banner tone="danger">{t(error)}</Banner> : null}
+      <ErrorBanner error={error} />
       <Button type="submit" size="lg" block loading={busy} disabled={!username.trim() || !password}>
         {t('login.submit')}
       </Button>
@@ -300,7 +313,7 @@ function QrLogin({ onResult }: { onResult: (r: LoginResult) => void }) {
   const [qr, setQr] = useState<ReturnType<typeof parsePronoteQr>>(null);
   const [pin, setPin] = useState('');
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<TKey | null>(null);
+  const [error, setError] = useState<AppError | null>(null);
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
@@ -310,7 +323,7 @@ function QrLogin({ onResult }: { onResult: (r: LoginResult) => void }) {
     try {
       onResult(await loginWithQr(qr, pin));
     } catch (err) {
-      setError(err instanceof AppError ? err.key : 'error.generic');
+      setError(toAppError(err, 'qr'));
       setBusy(false);
     }
   };
@@ -339,7 +352,7 @@ function QrLogin({ onResult }: { onResult: (r: LoginResult) => void }) {
           required
         />
       </Field>
-      {error ? <Banner tone="danger">{t(error)}</Banner> : null}
+      <ErrorBanner error={error} />
       <Button type="submit" size="lg" block loading={busy} disabled={pin.length !== 4}>
         {t('login.submit')}
       </Button>
