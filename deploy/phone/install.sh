@@ -13,7 +13,9 @@ echo "== 1/5 Termux packages (Node.js, unzip, proot)"
 # Never stop on "keep or replace this config file?" questions.
 mkdir -p "$PREFIX/etc/apt/apt.conf.d"
 printf 'Dpkg::Options { "--force-confdef"; "--force-confold"; };\n' > "$PREFIX/etc/apt/apt.conf.d/99proed"
-pkg update -y
+# Full upgrade first: a fresh Termux is older than its package server, and installing a new curl
+# next to an old openssl breaks curl ("CANNOT LINK EXECUTABLE"). Upgrading everything keeps them in step.
+pkg upgrade -y
 pkg install -y nodejs-lts curl unzip proot
 # Subshells keep "Aborted" crash messages out of the screen.
 if ! (node -e "process.exit(0)") >/dev/null 2>&1; then

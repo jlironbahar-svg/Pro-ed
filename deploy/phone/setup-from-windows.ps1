@@ -114,9 +114,13 @@ $go = @"
 export NGROK_TOKEN='$Token'
 export NGROK_DOMAIN='$Domain'
 export PROED_SAVE_SETUP=1
+export DEBIAN_FRONTEND=noninteractive
 rm -f ~/proed-status
-if curl -fsSL $InstallUrl | bash; then echo ok > ~/proed-status; else echo failed > ~/proed-status; fi
-rm -f ~/proed-go.sh
+# Upgrade all Termux packages first (a fresh Termux is older than its package server; curl breaks otherwise).
+mkdir -p "`$PREFIX/etc/apt/apt.conf.d"
+printf 'Dpkg::Options { "--force-confdef"; "--force-confold"; };\n' > "`$PREFIX/etc/apt/apt.conf.d/99proed"
+if pkg upgrade -y && curl -fsSL $InstallUrl -o ~/proed-install.sh && bash ~/proed-install.sh; then echo ok > ~/proed-status; else echo failed > ~/proed-status; fi
+rm -f ~/proed-go.sh ~/proed-install.sh
 "@
 $b64 = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(($go -replace "`r", '')))
 & $Adb shell "run-as com.termux sh -c 'echo $b64 | $TermuxBin/base64 -d > $Home_/proed-go.sh'" | Out-Null
