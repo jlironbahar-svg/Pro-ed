@@ -411,7 +411,7 @@ Changes reach open apps within about a minute (the heartbeat asks them to check 
 - **Pronote relay** (`/relay`, PWA only): forwards requests to HTTPS Pronote hosts only (`*.index-education.net`, `www.index-education.com`, plus `RELAY_EXTRA_HOSTS`), never logs or stores bodies, passwords or tokens. The Android app calls Pronote directly with native HTTP and doesn't use the relay.
 - **Admin**: password (scrypt) + TOTP 2FA with replay protection, separate admin JWT, sessions revoked on log out, rate limiting on every route (stricter on login), secrets only in `server/.env` (never committed, never logged).
 
-ProEd uses [pawnote](https://github.com/LiterateInk/Pawnote.js), an unofficial Pronote library. ProEd is not affiliated with Index Education.
+ProEd uses [@blockshub/pawnote-lts](https://github.com/BlocksHub/Pawnote-LTS), the maintained fork of the unofficial Pronote library pawnote (the original is archived and does not work with Pronote 2026). ProEd is not affiliated with Index Education.
 
 ---
 
