@@ -261,6 +261,48 @@ To update later: `git pull` (or your changes), then `fly deploy`. Logs: `fly log
 
 Optional: use your own domain with `fly certs add proed.example.com` and follow the DNS instructions it prints. Update `PUBLIC_URL` and rebuild the APKs with the new address.
 
+### Free option (0 EUR): an old Android phone as the server
+
+An old Android phone (Android 7 or newer, for example a Nexus 6) can run the ProEd server at home on your Wi-Fi. A free [ngrok](https://ngrok.com) account gives it a fixed public HTTPS address.
+
+This brings back everything that needs a server:
+- the iPhone version;
+- live data (who is online, the activity chart);
+- admin login with a password and 2FA (no GitHub token);
+- the APK download page.
+
+The server runs in **open access**: no invite codes. Every phone that opens ProEd appears in ProEd Admin, where you can name it, move it between beta and normal, or block it.
+
+1. **ngrok account (free, no card).**
+   1. Sign up at <https://dashboard.ngrok.com/signup>.
+   2. Copy your **authtoken** (dashboard > Your Authtoken).
+   3. Create your free domain (dashboard > Domains > New Domain). It looks like `something.ngrok-free.app`.
+2. **Termux on the old phone.**
+   1. Install Termux from F-Droid (<https://f-droid.org/packages/com.termux/>), or from <https://github.com/termux/termux-app/releases>. On a Nexus 6, take the file ending in `armeabi-v7a.apk`.
+   2. Open it once.
+3. **Install ProEd.** In Termux, type:
+
+   ```
+   curl -fsSL https://raw.githubusercontent.com/jlironbahar-svg/Pro-ed/HEAD/deploy/phone/install.sh | bash
+   ```
+
+   Paste the authtoken and type the domain when asked. At the end, write down the **admin password** and scan the **QR code** with an authenticator app.
+4. **Start it:** `proed-start`. It prints your address and whether it is online. Stop it with `proed-stop`.
+5. **Keep it running.**
+   - Leave the phone charging and on Wi-Fi.
+   - In Android settings, turn off battery optimization for Termux.
+   - After the phone restarts, open Termux and type `proed-start` again.
+6. **Point the apps to it.** Put `https://<your-domain>` on the first line of the `SERVER_URL` file in the repository (or ask Claude to do it), then run the **Android APKs** workflow. The rebuilt APKs talk to your phone. The download links stay the same.
+
+Your links:
+- iPhone (Safari, then Share > Add to Home Screen): `https://<your-domain>`
+- Admin in a browser: `https://<your-domain>/console/`
+- APKs: the GitHub release links.
+
+On the free plan, ngrok shows a short warning page the first time a browser opens the address: tap **Visit Site** once. The apps are not affected.
+
+To update the server later, run the same `curl ... | bash` command again. It keeps your settings, admin account and data.
+
 ### Free option (0 EUR, no card): your own computer + Tailscale Funnel
 
 The server runs on your own computer. [Tailscale Funnel](https://tailscale.com/kb/1223/tailscale-funnel) (free personal plan, no card) gives it a fixed public HTTPS address like `https://my-pc.tail1234.ts.net`.

@@ -1,9 +1,77 @@
-import Database from 'better-sqlite3';
+import { createRequire } from 'node:module';
 import { mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { KNOWN_FLAGS } from '@proed/shared/core';
 
-export type DB = Database.Database;
+/** The small part of SQLite the server uses. Works with better-sqlite3 or Node's built-in node:sqlite. */
+export interface Statement {
+  run(...params: unknown[]): { changes: number | bigint };
+  get(...params: unknown[]): unknown;
+  all(...params: unknown[]): unknown[];
+}
+
+export interface DB {
+  prepare(sql: string): Statement;
+  exec(sql: string): void;
+  /** Wraps fn in BEGIN/COMMIT (ROLLBACK on error), like better-sqlite3's transaction(). */
+  transaction<T>(fn: () => T): () => T;
+  close(): void;
+  /** Which driver is in use: "better-sqlite3" or "node:sqlite". */
+  driver: string;
+}
+
+const require = createRequire(import.meta.url);
+
+/*
+  better-sqlite3 is a native module: it is fast but needs a prebuilt binary for the platform.
+  On an Android phone (Termux) there is none, so the server falls back to node:sqlite, built into
+  Node.js 22.13+. Both give the same synchronous API below.
+*/
+function openDriver(path: string): DB {
+  if (process.env.PROED_SQLITE !== 'node') {
+    try {
+      const Better = require('better-sqlite3') as new (p: string) => {
+        prepare(sql: string): Statement;
+        exec(sql: string): void;
+        transaction<T>(fn: () => T): () => T;
+        close(): void;
+      };
+      const db = new Better(path);
+      return {
+        prepare: (sql) => db.prepare(sql),
+        exec: (sql) => void db.exec(sql),
+        transaction: (fn) => db.transaction(fn),
+        close: () => db.close(),
+        driver: 'better-sqlite3',
+      };
+    } catch {
+      /* not installed or no binary for this platform: use node:sqlite */
+    }
+  }
+  const { DatabaseSync } = require('node:sqlite') as {
+    DatabaseSync: new (p: string) => { prepare(sql: string): Statement; exec(sql: string): void; close(): void };
+  };
+  const db = new DatabaseSync(path);
+  return {
+    prepare: (sql) => db.prepare(sql),
+    exec: (sql) => db.exec(sql),
+    transaction:
+      <T>(fn: () => T) =>
+      () => {
+        db.exec('BEGIN');
+        try {
+          const result = fn();
+          db.exec('COMMIT');
+          return result;
+        } catch (e) {
+          db.exec('ROLLBACK');
+          throw e;
+        }
+      },
+    close: () => db.close(),
+    driver: 'node:sqlite',
+  };
+}
 
 const SCHEMA = `
 CREATE TABLE IF NOT EXISTS users (
@@ -75,10 +143,10 @@ export function openDb(dataDir: string, file = 'proed.sqlite'): DB {
     mkdirSync(dataDir, { recursive: true });
     path = join(dataDir, file);
   }
-  const db = new Database(path);
-  db.pragma('journal_mode = WAL');
-  db.pragma('foreign_keys = ON');
-  db.pragma('busy_timeout = 5000');
+  const db = openDriver(path);
+  if (path !== ':memory:') db.exec('PRAGMA journal_mode = WAL');
+  db.exec('PRAGMA foreign_keys = ON');
+  db.exec('PRAGMA busy_timeout = 5000');
   db.exec(SCHEMA);
   const seed = db.prepare('INSERT OR IGNORE INTO flags (key, mode, description) VALUES (?, ?, ?)');
   for (const [key, description] of Object.entries(KNOWN_FLAGS)) seed.run(key, 'on', description);

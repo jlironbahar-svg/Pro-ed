@@ -100,8 +100,51 @@ jobs:
           path: out/*.apk
           if-no-files-found: error
 
+  # Ready-to-run server for an Android phone (Termux): no native modules (uses node:sqlite).
+  server-bundle:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Build server, PWA and admin web
+        run: |
+          npm run build -w shared
+          npm run build -w proed-app
+          npm run build:web -w proed-admin
+          npm run build -w proed-server
+      - name: Assemble ProEd-Server.zip
+        run: |
+          B=bundle/proed
+          mkdir -p $B/server $B/proed-app $B/proed-admin
+          cp -r server/dist server/.env.example $B/server/
+          node -e "const p=require('./server/package.json');require('fs').writeFileSync('$B/server/package.json',JSON.stringify({name:p.name,version:p.version,type:'module',main:'dist/index.js'},null,2))"
+          cp -r proed-app/dist $B/proed-app/dist
+          cp -r proed-admin/dist-web $B/proed-admin/dist-web
+          node -e "const p=require('./server/package.json');const d={...p.dependencies};delete d['@proed/shared'];require('fs').writeFileSync('$B/package.json',JSON.stringify({name:'proed-phone-server',private:true,type:'module',dependencies:d},null,2))"
+          (cd $B && npm install --omit=dev --omit=optional --ignore-scripts --no-package-lock --no-audit --no-fund)
+          mkdir -p $B/node_modules/@proed/shared
+          cp -r shared/dist shared/package.json $B/node_modules/@proed/shared/
+          cp deploy/phone/start.sh deploy/phone/stop.sh $B/
+          chmod +x $B/*.sh
+          # Smoke test with Node's built-in SQLite, like on the phone.
+          (cd $B/server && node dist/setup.js --secrets-only >/dev/null && PROED_SQLITE=node PORT=8799 timeout 8 node --env-file=.env dist/index.js > ../smoke.log 2>&1 &) ; sleep 5
+          curl -sf http://127.0.0.1:8799/healthz && curl -sf -o /dev/null http://127.0.0.1:8799/ && curl -sf -o /dev/null http://127.0.0.1:8799/console/
+          grep -q "node:sqlite" $B/smoke.log
+          rm -rf $B/server/.env $B/server/data $B/smoke.log
+          (cd bundle && zip -qr ../ProEd-Server.zip proed)
+          ls -la ProEd-Server.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ProEd-Server
+          path: ProEd-Server.zip
+          if-no-files-found: error
+
   publish:
-    needs: build
+    needs: [build, server-bundle]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -120,10 +163,11 @@ jobs:
           NOTES="Latest ProEd APKs (built from ${GITHUB_SHA::7}).
 
           - ProEd (students): $BASE/ProEd.apk
-          - ProEd Admin: $BASE/ProEd-Admin.apk"
+          - ProEd Admin: $BASE/ProEd-Admin.apk
+          - Server for an Android phone (Termux): $BASE/ProEd-Server.zip"
           if gh release view apk-latest >/dev/null 2>&1; then
             gh release edit apk-latest --notes "$NOTES"
           else
             gh release create apk-latest --target "$GITHUB_SHA" --title "ProEd APKs" --notes "$NOTES"
           fi
-          gh release upload apk-latest out/*.apk --clobber
+          gh release upload apk-latest out/* --clobber

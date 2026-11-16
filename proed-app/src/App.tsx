@@ -5,7 +5,7 @@ import { loadSettings } from './lib/settings';
 import { sessionStore } from './lib/session';
 import { loadCachedHomework } from './homework/store';
 import { loadSavedSession } from './pronote/client';
-import { accessStore, loadAccess, startAccessLoop } from './access/controller';
+import { SERVERLESS, accessStore, loadAccess, startAccessLoop } from './access/controller';
 import { LoginScreen } from './screens/LoginScreen';
 import {
   CheckingScreen,
@@ -42,10 +42,10 @@ export function App() {
     );
   }
 
-  // Access control comes first: invite code, then the signed access token.
-  if (!access.inviteCode) return <InviteScreen />;
+  // Access control comes first: invite code (unless the server is in open access), then the access token.
+  if (!access.inviteCode && (SERVERLESS || access.needsCode)) return <InviteScreen />;
   const view = access.view;
-  if (!view) return access.checking ? <CheckingScreen /> : <LockScreen reason="expired" />;
+  if (!view) return access.checking ? <CheckingScreen /> : <LockScreen reason={access.inviteCode ? 'expired' : 'offline'} />;
   const graceHours = access.claims?.exp && access.claims.iat ? Math.round((access.claims.exp - access.claims.iat) / 3600) : undefined;
   if (view.kind === 'locked') return <LockScreen reason={view.reason} graceHours={graceHours} />;
   if (view.kind === 'shutdown') return <ShutdownScreen message={view.message} />;

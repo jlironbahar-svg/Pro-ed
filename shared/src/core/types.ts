@@ -8,7 +8,8 @@ export type DenyReason = 'unknown_code' | 'blocked' | 'code_in_use' | 'invalid_r
 /* ---------- Public access API ---------- */
 
 export interface CheckRequest {
-  inviteCode: string;
+  /** Not needed when the server runs in open access. */
+  inviteCode?: string;
   deviceId: string;
   /** SHA-256 hex of the lowercased Pronote username. Optional before the first Pronote login. */
   usernameHash?: string;
@@ -93,6 +94,8 @@ export interface DashboardData {
   now: number;
   /** false in serverless mode: there is no live data without the server. */
   live?: boolean;
+  /** true when the server needs no invite codes (users are phones / Pronote accounts). */
+  openAccess?: boolean;
   online: OnlineDevice[];
   totals: { users: number; activeToday: number; activeWeek: number };
   daily: { day: string; users: number }[];
@@ -136,6 +139,8 @@ export interface SystemSettings {
   message: string;
   minVersion: string;
   latestApk: (LatestApk & { size: number; uploadedAt: number }) | null;
+  /** true when the server needs no invite codes. */
+  openAccess?: boolean;
 }
 
 export interface AuditEntry {

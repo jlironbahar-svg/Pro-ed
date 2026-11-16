@@ -41,7 +41,7 @@ const relayFetcher: Fetcher = async (req) => {
   try {
     res = await fetch(serverUrl('/relay'), {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': '1' },
       body: JSON.stringify({
         url: req.url.href,
         method: req.method ?? 'GET',

@@ -5,6 +5,7 @@ import { openDb, pruneOldData } from './db.js';
 const config = loadConfig();
 assertSecrets(config);
 const db = openDb(config.dataDir);
+console.log(`ProEd server: SQLite driver ${db.driver}`);
 pruneOldData(db);
 setInterval(() => pruneOldData(db), 24 * 3600_000).unref();
 const app = await buildApp({ config, db });

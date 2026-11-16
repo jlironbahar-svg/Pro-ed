@@ -21,6 +21,7 @@ const config = {
   accessPrivateKey: keys.privatePem,
   accessPublicKey: keys.publicPem,
   graceHours: 72,
+  openAccess: false,
 };
 const HASH = 'c'.repeat(64);
 const decode = (token: string) => JSON.parse(Buffer.from(token.split('.')[1], 'base64url').toString()) as AccessClaims;
@@ -146,5 +147,44 @@ describe('relay target rules', () => {
     expect(isAllowedTarget('https://127.0.0.1/', [])).toBeNull();
     expect(isAllowedTarget('https://index-education.net.evil.com/', [])).toBeNull();
     expect(isAllowedTarget('https://pronote.lycee.fr/pronote/', ['pronote.lycee.fr'])).not.toBeNull();
+  });
+});
+
+describe('open access (no invite codes)', () => {
+  let open: FastifyInstance;
+  let odb: DB;
+  beforeAll(async () => {
+    odb = openDb(':memory:');
+    open = await buildApp({ config: { ...config, openAccess: true }, db: odb });
+  });
+  afterAll(() => open.close());
+  const ocheck = async (body: object) =>
+    decode(
+      (await open.inject({ method: 'POST', url: '/api/check', payload: { deviceType: 'android-apk', appVersion: '1.0.0', ...body } })).json<CheckResponse>().token,
+    );
+  const users = () => (odb.prepare('SELECT COUNT(*) AS n FROM users').get() as { n: number }).n;
+
+  it('lets an app in without a code and registers it once', async () => {
+    const first = await ocheck({ deviceId: 'phone-aaaa-0001' });
+    expect(first).toMatchObject({ allowed: true });
+    const again = await ocheck({ deviceId: 'phone-aaaa-0001' });
+    expect(again.sub).toBe(first.sub);
+    expect(users()).toBe(1);
+  });
+
+  it('keeps the same user after the Pronote login, and across reinstalls', async () => {
+    const before = await ocheck({ deviceId: 'phone-aaaa-0001' });
+    const after = await ocheck({ deviceId: 'phone-aaaa-0001', usernameHash: 'a'.repeat(64) });
+    expect(after.sub).toBe(before.sub);
+    const reinstalled = await ocheck({ deviceId: 'phone-bbbb-0002', usernameHash: 'a'.repeat(64) });
+    expect(reinstalled.sub).toBe(before.sub);
+    expect(users()).toBe(1);
+  });
+
+  it('gives another Pronote account its own user, and blocking still works', async () => {
+    const other = await ocheck({ deviceId: 'phone-aaaa-0001', usernameHash: 'b'.repeat(64) });
+    expect(users()).toBe(2);
+    odb.prepare('UPDATE users SET blocked = 1 WHERE id = ?').run(other.sub);
+    expect(await ocheck({ deviceId: 'phone-aaaa-0001', usernameHash: 'b'.repeat(64) })).toMatchObject({ allowed: false, reason: 'blocked' });
   });
 });

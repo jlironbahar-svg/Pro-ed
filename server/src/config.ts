@@ -20,6 +20,8 @@ export interface Config {
   relayExtraHosts: string[];
   logLevel: string;
   timeZone: string;
+  /** No invite codes: every app that checks in gets a user (admin can still block or move to beta). */
+  openAccess: boolean;
 }
 
 function list(value: string | undefined): string[] {
@@ -55,6 +57,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     relayExtraHosts: list(env.RELAY_EXTRA_HOSTS).map((h) => h.toLowerCase()),
     logLevel: env.LOG_LEVEL ?? 'info',
     timeZone: env.TIME_ZONE ?? 'Europe/Paris',
+    openAccess: env.OPEN_ACCESS !== 'false',
   };
 }
 

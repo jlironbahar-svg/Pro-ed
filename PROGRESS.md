@@ -1,6 +1,6 @@
 # ProEd progress
 
-Status: COMPLETE (phases 1-11 done)
+Status: IN PROGRESS (phase 12: server on an old Android phone, open access)
 
 Legend: TODO / DOING NOW / DONE. Exactly one step is DOING NOW at any time.
 
@@ -97,6 +97,14 @@ Legend: TODO / DOING NOW / DONE. Exactly one step is DOING NOW at any time.
 - [DONE] 11.5 Initial proed-config.json, workflow env (VITE_CONFIG_URL / VITE_GITHUB_REPO), README
 - [DONE] 11.6 Typecheck, build, tests, commit, run the APK workflow, verify links
 
+## Phase 12: Phone server (Termux + ngrok) and open access (user request)
+- [DONE] 12.1 Server: SQLite adapter (better-sqlite3, or node:sqlite when the native module is missing), better-sqlite3 optional
+- [DONE] 12.2 Server: open access (OPEN_ACCESS=true): /api/check without invite code registers the device/user; tests
+- [DONE] 12.3 Student app: no invite screen in open access (auto check), ngrok-skip-browser-warning header
+- [DONE] 12.4 Admin app: native HTTP, open-access user list (rename, beta/normal, block), hide invite creation
+- [DONE] 12.5 Phone bundle (ProEd-Server.zip) built by CI + Termux install/start scripts (ngrok static domain)
+- [DOING NOW] 12.6 Typecheck, build, tests, README, commit, CI run, verify
+
 ## Decisions
 - Node 22, npm workspaces. Root scripts run each workspace.
 - Shared package is consumed as TypeScript source (no build step) via Vite + TS path resolution.
@@ -129,6 +137,7 @@ Legend: TODO / DOING NOW / DONE. Exactly one step is DOING NOW at any time.
 - Fix (user report "Impossible de joindre ce serveur Pronote"): Pronote 2026 writes `Start ({...});} catch` and pawnote 1.6.2 expects `)} catch`, so every login failed with PageUnavailableError. fixPronoteContent() in pronote/fetcher.ts removes the semicolon (both fetchers). Reproduced and verified against a real school from the VM. Wrong credentials on ENT schools now suggest the QR code.
 - Pronote library: pawnote is archived (last release 1.6.2, Sept 2025) and breaks on Pronote 2026 (session page parsing, password key derivation, challenge, token re-login). Switched (user approved) to the maintained fork @blockshub/pawnote-lts pinned at 1.6.4: reviewed the diff (3 source files) and the dist (no new URLs or risky APIs, same deps). Verified from the VM against real schools: the login now reaches Pronote's authentication and is refused only for the fake password. The temporary page shim was removed.
 - CI signing: Android Gradle no longer keeps its debug key at ~/.android/debug.keystore on the runner, so the cache saved nothing and every build had a new signature. Now the workflow creates a ProEd key on the first build, keeps it in the Actions cache (key proed-signing-<app>-v1, expires after 7 days without builds) and always builds signed release APKs. User keystore secrets take priority. Note: caches of a public repo are not a vault; the user's own secrets are the long-term answer. Verified: two consecutive builds (runs 43864647612, 43865105842) have the same certificates (ProEd e3fd4ad4..., Admin 7ab32b4f...).
+- Phase 12 decisions (user): invite codes removed (open access: anyone with the app; admin sees each phone/user, sets beta/normal/blocked; no names stored). Fixed public address with a free ngrok static domain; server runs on the user's Nexus 6 (Android 7.1.1, 32-bit) in Termux.
 - iPhone: not possible without a server (Apple allows no sideloaded apps; a PWA needs an HTTPS host and a CORS relay for Pronote). Not built.
 - Demo videos (Playwright, recorded in the VM) were sent to the user: build + tests, student app, admin app, access control. They are not committed (binary files).
 

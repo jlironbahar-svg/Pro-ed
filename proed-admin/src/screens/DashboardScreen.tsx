@@ -49,8 +49,8 @@ export function DashboardScreen() {
           data.online.map((o) => (
             <Row
               key={`${o.userId}-${o.lastSeen}-${o.deviceType}`}
-              primary={o.label || o.code}
-              secondary={`${t(`device.${o.deviceType}`)} · ${o.appVersion}${o.label ? ` · ${o.code}` : ''}`}
+              primary={o.label || (data.openAccess ? `${t('users.unnamed')} #${o.userId.slice(0, 4)}` : o.code)}
+              secondary={`${t(`device.${o.deviceType}`)} · ${o.appVersion}${o.label && !data.openAccess ? ` · ${o.code}` : ''}`}
               right={
                 <span className="inline-flex items-center gap-1.5">
                   <span className="h-1.5 w-1.5 rounded-full bg-success" />

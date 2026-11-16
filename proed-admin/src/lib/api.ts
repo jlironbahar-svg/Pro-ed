@@ -60,6 +60,7 @@ export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
   }
   const headers = new Headers(init.headers);
   if (session) headers.set('Authorization', `Bearer ${session.token}`);
+  headers.set('ngrok-skip-browser-warning', '1');
   if (init.body && typeof init.body === 'string') headers.set('Content-Type', 'application/json');
   let res: Response;
   try {

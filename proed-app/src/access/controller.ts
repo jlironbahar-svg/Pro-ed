@@ -24,6 +24,8 @@ export interface AccessState extends Saved {
   checking: boolean;
   /** Last check could not reach the server. */
   offline: boolean;
+  /** The server asked for an invite code (it is not in open access). */
+  needsCode: boolean;
   view: AccessView | null;
 }
 
@@ -43,9 +45,18 @@ export const accessStore = createStore<AccessState>({
   checking: false,
   offline: false,
   view: null,
+  needsCode: false,
 });
 
 setPronoteGuard(() => canCallPronote(accessStore.get().view));
+
+/** Free ngrok addresses show a warning page to browsers unless this header is sent. */
+export const SERVER_HEADERS = { 'ngrok-skip-browser-warning': '1' };
+
+/** In server mode a check can run without a code (open access); serverless mode needs one. */
+function canCheck(inviteCode: string | null): boolean {
+  return !!inviteCode || !SERVERLESS;
+}
 
 function persist(): void {
   const { inviteCode, token, publicKey, deviceId, claims } = accessStore.get();
@@ -76,7 +87,7 @@ export async function loadAccess(): Promise<void> {
     token: claims ? saved!.token : null,
     publicKey,
     deviceId,
-    checking: !!saved?.inviteCode && !claims,
+    checking: canCheck(saved?.inviteCode ?? null) && !claims,
   }));
   applyClaims(claims);
   persist();
@@ -93,14 +104,15 @@ export type CheckResult = { status: 'ok' } | { status: 'denied'; reason: DenyRea
 export async function runCheck(code?: string): Promise<CheckResult> {
   const state = accessStore.get();
   const inviteCode = code ?? state.inviteCode;
-  if (!inviteCode) return { status: 'denied', reason: 'unknown_code' };
+  // Server mode: the check also works without a code when the server is in open access.
+  if (!inviteCode && SERVERLESS) return { status: 'denied', reason: 'unknown_code' };
   accessStore.set((s) => ({ ...s, checking: true }));
   try {
     if (SERVERLESS) {
       const res = await fetch(`${CONFIG_URL}?t=${Date.now()}`, { cache: 'no-store' });
       if (!res.ok) throw new Error(`config ${res.status}`);
       const config = (await res.json()) as PublicConfig;
-      const claims = claimsFromConfig(config, await hashInviteCode(inviteCode, config.salt, config.iterations), Date.now());
+      const claims = claimsFromConfig(config, await hashInviteCode(inviteCode ?? '', config.salt, config.iterations), Date.now());
       if (!claims.allowed && claims.reason === 'unknown_code' && code) {
         accessStore.set((s) => ({ ...s, checking: false, offline: false }));
         return { status: 'denied', reason: 'unknown_code' };
@@ -111,7 +123,7 @@ export async function runCheck(code?: string): Promise<CheckResult> {
       return claims.allowed ? { status: 'ok' } : { status: 'denied', reason: claims.reason ?? 'blocked' };
     }
     const body: CheckRequest = {
-      inviteCode,
+      ...(inviteCode ? { inviteCode } : {}),
       deviceId: state.deviceId,
       usernameHash: await usernameHash(),
       deviceType: deviceType(),
@@ -119,7 +131,7 @@ export async function runCheck(code?: string): Promise<CheckResult> {
     };
     const res = await fetch(serverUrl('/api/check'), {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...SERVER_HEADERS },
       body: JSON.stringify(body),
     });
     if (!res.ok) throw new Error(`check ${res.status}`);
@@ -129,6 +141,11 @@ export async function runCheck(code?: string): Promise<CheckResult> {
     const claims = await verifyToken(data.token, key);
     if (!claims) throw new Error('bad token');
 
+    // No code and the server wants one: show the invite screen.
+    if (!claims.allowed && claims.reason === 'unknown_code' && !inviteCode) {
+      accessStore.set((s) => ({ ...s, checking: false, offline: false, needsCode: true }));
+      return { status: 'denied', reason: 'unknown_code' };
+    }
     // An unknown code typed on the invite screen is not saved.
     if (!claims.allowed && claims.reason === 'unknown_code' && code) {
       accessStore.set((s) => ({ ...s, checking: false, offline: false }));
@@ -138,7 +155,7 @@ export async function runCheck(code?: string): Promise<CheckResult> {
       accessStore.set((s) => ({ ...s, checking: false, offline: false }));
       return { status: 'denied', reason: 'code_in_use' };
     }
-    accessStore.set((s) => ({ ...s, inviteCode, token: data.token, publicKey: key, checking: false, offline: false }));
+    accessStore.set((s) => ({ ...s, inviteCode: inviteCode || null, token: data.token, publicKey: key, checking: false, offline: false, needsCode: false }));
     applyClaims(claims);
     persist();
     return claims.allowed ? { status: 'ok' } : { status: 'denied', reason: claims.reason ?? 'blocked' };
@@ -162,7 +179,7 @@ async function heartbeat(): Promise<void> {
   try {
     const res = await fetch(serverUrl('/api/heartbeat'), {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}`, ...SERVER_HEADERS },
       body: JSON.stringify({ deviceId, deviceType: deviceType(), appVersion: APP_VERSION }),
     });
     const data = (await res.json().catch(() => ({ ok: false, recheck: true }))) as HeartbeatResponse;
@@ -183,13 +200,13 @@ export function startAccessLoop(): void {
     lastCheck = Date.now();
     void runCheck();
   };
-  if (accessStore.get().inviteCode) check();
-  window.setInterval(() => accessStore.get().inviteCode && check(), ACCESS_CHECK_INTERVAL_MS);
+  if (canCheck(accessStore.get().inviteCode)) check();
+  window.setInterval(() => canCheck(accessStore.get().inviteCode) && check(), ACCESS_CHECK_INTERVAL_MS);
   window.setInterval(() => void heartbeat(), HEARTBEAT_INTERVAL_MS);
   // Re-evaluate the token expiry every minute (offline grace period).
   window.setInterval(() => applyClaims(accessStore.get().claims), 60_000);
   document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState !== 'visible' || !accessStore.get().inviteCode) return;
+    if (document.visibilityState !== 'visible' || !canCheck(accessStore.get().inviteCode)) return;
     if (Date.now() - lastCheck > ACCESS_CHECK_INTERVAL_MS) check();
     else void heartbeat();
   });
@@ -197,7 +214,7 @@ export function startAccessLoop(): void {
   let previous = sessionStore.get()?.username;
   sessionStore.subscribe(() => {
     const current = sessionStore.get()?.username;
-    if (current && current !== previous && accessStore.get().inviteCode) check();
+    if (current && current !== previous && canCheck(accessStore.get().inviteCode)) check();
     previous = current;
   });
   window.setTimeout(() => void heartbeat(), 3_000);

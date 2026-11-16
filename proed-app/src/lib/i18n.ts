@@ -144,6 +144,7 @@ const fr = {
   'update.banner': 'La version {v} est disponible.',
   'update.bannerAction': 'Télécharger',
   'access.checking': 'Vérification de ton accès',
+  'access.offlineTitle': 'Serveur ProEd injoignable',
 };
 
 type Key = keyof typeof fr;
@@ -288,6 +289,7 @@ const en: Record<Key, string> = {
   'update.banner': 'Version {v} is available.',
   'update.bannerAction': 'Download',
   'access.checking': 'Checking your access',
+  'access.offlineTitle': 'ProEd server unreachable',
 };
 
 const dictionaries: Record<Lang, Record<Key, string>> = { fr, en };

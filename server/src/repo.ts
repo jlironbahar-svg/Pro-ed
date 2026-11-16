@@ -80,6 +80,14 @@ export function findUser(db: DB, id: string): UserRow | undefined {
   return db.prepare('SELECT * FROM users WHERE id = ?').get(id) as UserRow | undefined;
 }
 
+export function findUserByUsernameHash(db: DB, hash: string): UserRow | undefined {
+  return db.prepare('SELECT * FROM users WHERE username_hash = ? ORDER BY created_at LIMIT 1').get(hash) as UserRow | undefined;
+}
+
+export function findUserByDevice(db: DB, deviceId: string): UserRow | undefined {
+  return db.prepare('SELECT u.* FROM users u JOIN devices d ON d.user_id = u.id WHERE d.id = ?').get(deviceId) as UserRow | undefined;
+}
+
 export function createUser(db: DB, label: string, now = Date.now()): UserRow {
   for (let attempt = 0; attempt < 10; attempt++) {
     const code = generateCode();

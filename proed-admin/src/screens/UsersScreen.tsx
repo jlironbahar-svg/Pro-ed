@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { ChevronRight, Copy, Plus, Search } from 'lucide-react';
-import type { AdminUser, AdminUserDetails } from '@proed/shared/core';
+import type { AdminUser, AdminUserDetails, SystemSettings } from '@proed/shared/core';
 import { Badge, Banner, Button, Card, Field, Input, Sheet, Spinner } from '@proed/shared/ui';
 import { useT } from '../lib/i18n';
 import { api, isGithubMode, json } from '../lib/api';
@@ -14,7 +14,10 @@ export function UsersScreen() {
   const { data, reload } = usePolling(() => api<AdminUser[]>(`/admin/users?q=${encodeURIComponent(q)}`));
   const [creating, setCreating] = useState(false);
   const [openId, setOpenId] = useState<string | null>(null);
+  const system = usePolling(() => (isGithubMode() ? Promise.resolve(null) : api<SystemSettings>('/admin/system')));
+  const openAccess = !!system.data?.openAccess;
   const now = Date.now();
+  const nameOf = (u: AdminUser) => u.label || (openAccess ? `${t('users.unnamed')} #${u.id.slice(0, 4)}` : u.code);
 
   return (
     <div className="flex flex-col gap-4">
@@ -29,10 +32,13 @@ export function UsersScreen() {
           <Search size={16} className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-faint" />
           <Input value={q} onChange={(e) => setQ(e.target.value)} onBlur={() => void reload()} placeholder={t('users.search')} className="pl-9" enterKeyHint="search" />
         </form>
-        <Button size="lg" className="h-11" icon={<Plus size={16} />} onClick={() => setCreating(true)}>
-          <span className="hidden sm:inline">{t('users.new')}</span>
-        </Button>
+        {!openAccess ? (
+          <Button size="lg" className="h-11" icon={<Plus size={16} />} onClick={() => setCreating(true)}>
+            <span className="hidden sm:inline">{t('users.new')}</span>
+          </Button>
+        ) : null}
       </div>
+      {openAccess ? <p className="px-1 text-sm text-muted">{t('users.openHint')}</p> : null}
 
       {!data ? (
         <div className="flex justify-center py-16 text-muted">
@@ -48,12 +54,12 @@ export function UsersScreen() {
             <button key={u.id} type="button" onClick={() => setOpenId(u.id)} className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-subtle">
               <div className="min-w-0 flex-1">
                 <p className="flex items-center gap-2 text-sm font-medium">
-                  <span className="truncate">{u.label || u.code}</span>
+                  <span className="truncate">{nameOf(u)}</span>
                   {u.blocked ? <Badge tone="danger">{t('users.blocked')}</Badge> : null}
                   {u.channel === 'beta' ? <Badge tone="accent">{t('users.beta')}</Badge> : null}
                 </p>
                 <p className="truncate text-xs text-muted tabular">
-                  {u.label ? `${u.code} · ` : ''}
+                  {openAccess ? (u.deviceType ? `${t(`device.${u.deviceType}`)} · ` : '') : u.label ? `${u.code} · ` : ''}
                   {isGithubMode() ? '' : u.lastSeen ? t('users.lastSeen', { ago: formatAgo(u.lastSeen, now, lang) }) : t('users.notUsed')}
                 </p>
               </div>
@@ -67,6 +73,7 @@ export function UsersScreen() {
       {openId ? (
         <UserSheet
           id={openId}
+          openAccess={openAccess}
           onClose={() => setOpenId(null)}
           onChanged={() => void reload()}
           formatDate={(ts) => formatDate(ts, lang)}
@@ -159,10 +166,23 @@ function Info({ label, value }: { label: string; value: string }) {
   );
 }
 
-function UserSheet({ id, onClose, onChanged, formatDate }: { id: string; onClose: () => void; onChanged: () => void; formatDate: (ts: number) => string }) {
+function UserSheet({
+  id,
+  openAccess,
+  onClose,
+  onChanged,
+  formatDate,
+}: {
+  id: string;
+  openAccess: boolean;
+  onClose: () => void;
+  onChanged: () => void;
+  formatDate: (ts: number) => string;
+}) {
   const { t, lang } = useT();
   const { data, setData } = usePolling(() => api<AdminUserDetails>(`/admin/users/${id}`));
   const [busy, setBusy] = useState<string | null>(null);
+  const [name, setName] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const now = Date.now();
 
@@ -193,14 +213,14 @@ function UserSheet({ id, onClose, onChanged, formatDate }: { id: string; onClose
       ) : (
         <div className="flex flex-col gap-4">
           <div>
-            <p className="text-lg font-semibold">{data.label || data.code}</p>
+            <p className="text-lg font-semibold">{data.label || (openAccess ? `${t('users.unnamed')} #${data.id.slice(0, 4)}` : data.code)}</p>
             <div className="mt-1 flex gap-1.5">
               {data.blocked ? <Badge tone="danger">{t('users.blocked')}</Badge> : null}
               <Badge tone={data.channel === 'beta' ? 'accent' : 'neutral'}>{t(`channel.${data.channel}`)}</Badge>
             </div>
           </div>
           <div className="divide-y divide-line">
-            <Info label={t('users.code')} value={data.code} />
+            {!openAccess ? <Info label={t('users.code')} value={data.code} /> : null}
             {!isGithubMode() ? (
               <>
                 <Info label={t('users.lastSeenLabel')} value={data.lastSeen ? formatAgo(data.lastSeen, now, lang) : t('common.never')} />
@@ -225,6 +245,24 @@ function UserSheet({ id, onClose, onChanged, formatDate }: { id: string; onClose
               ))}
             </div>
           ) : null}
+          <form
+            className="flex flex-col gap-1.5"
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (name !== null) void patch('label', { label: name.trim() }).then(() => setName(null));
+            }}
+          >
+            <label htmlFor="user-name" className="text-sm font-medium">
+              {t('users.rename')}
+            </label>
+            <div className="flex gap-2">
+              <Input id="user-name" value={name ?? data.label} onChange={(e) => setName(e.target.value)} maxLength={60} className="h-10" />
+              <Button type="submit" variant="secondary" className="h-10" loading={busy === 'label'} disabled={name === null || name.trim() === data.label}>
+                {t('common.save')}
+              </Button>
+            </div>
+            <p className="text-xs text-muted">{t('users.renameHint')}</p>
+          </form>
           <div className="grid grid-cols-2 gap-2">
             <Button variant="secondary" loading={busy === 'block'} onClick={() => patch('block', { blocked: !data.blocked })}>
               {data.blocked ? t('users.unblock') : t('users.block')}

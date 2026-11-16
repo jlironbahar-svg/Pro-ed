@@ -50,7 +50,7 @@ export async function buildApp({ config, db }: AppDeps): Promise<FastifyInstance
     reply.header('vary', 'Origin');
     if (req.method === 'OPTIONS') {
       reply.header('access-control-allow-methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
-      reply.header('access-control-allow-headers', 'content-type, authorization');
+      reply.header('access-control-allow-headers', 'content-type, authorization, ngrok-skip-browser-warning');
       reply.header('access-control-max-age', '600');
       return reply.code(204).send();
     }

@@ -191,6 +191,7 @@ export async function adminRoutes(app: FastifyInstance, opts: { db: DB; config: 
         }));
       return {
         now,
+        openAccess: config.openAccess,
         online,
         totals: {
           users: count('SELECT COUNT(*) AS n FROM users'),
@@ -328,7 +329,7 @@ export async function adminRoutes(app: FastifyInstance, opts: { db: DB; config: 
 
     /* ---------- system controls ---------- */
 
-    secured.get('/admin/system', async () => getSystem(db, config.publicUrl));
+    secured.get('/admin/system', async () => ({ ...getSystem(db, config.publicUrl), openAccess: config.openAccess }));
 
     secured.put<{ Body: { state?: SystemState; message?: string; minVersion?: string } }>(
       '/admin/system',
@@ -362,7 +363,7 @@ export async function adminRoutes(app: FastifyInstance, opts: { db: DB; config: 
           audit(db, 'system.min_version', `${before.minVersion} -> ${minVersion.trim()}`);
         }
         bumpRevision(db);
-        return getSystem(db, config.publicUrl);
+        return { ...getSystem(db, config.publicUrl), openAccess: config.openAccess };
       },
     );
 
@@ -394,7 +395,7 @@ export async function adminRoutes(app: FastifyInstance, opts: { db: DB; config: 
       setSetting(db, 'apk_uploaded_at', String(Date.now()));
       audit(db, 'apk.upload', `${version} (${Math.round(size / 1024)} KB)`);
       bumpRevision(db);
-      return getSystem(db, config.publicUrl);
+      return { ...getSystem(db, config.publicUrl), openAccess: config.openAccess };
     });
 
     /* ---------- audit log ---------- */

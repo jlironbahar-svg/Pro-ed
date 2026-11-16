@@ -4,7 +4,7 @@ import { Banner, Button, CenterScreen, Field, Input, Logo, Spinner } from '@proe
 import { useT, type TKey } from '../lib/i18n';
 import { APP_VERSION, isNative } from '../lib/platform';
 import { DEFAULT_GRACE_HOURS, type LatestApk } from '@proed/shared/core';
-import { forgetInviteCode, runCheck } from '../access/controller';
+import { accessStore, forgetInviteCode, runCheck } from '../access/controller';
 
 function Footer() {
   const { t } = useT();
@@ -106,15 +106,23 @@ export function InviteScreen() {
   );
 }
 
-export function LockScreen({ reason, graceHours = DEFAULT_GRACE_HOURS }: { reason: 'denied' | 'expired'; graceHours?: number }) {
+export function LockScreen({ reason, graceHours = DEFAULT_GRACE_HOURS }: { reason: 'denied' | 'expired' | 'offline'; graceHours?: number }) {
   const { t } = useT();
+  const hasCode = !!accessStore.get().inviteCode;
+  if (reason === 'offline') {
+    return (
+      <InfoScreen title={t('access.offlineTitle')} actions={<RetryButton />}>
+        {t('invite.offline')}
+      </InfoScreen>
+    );
+  }
   return (
     <InfoScreen
       title={t('lock.title')}
       actions={
         <>
           <RetryButton />
-          {reason === 'denied' ? (
+          {reason === 'denied' && hasCode ? (
             <Button variant="ghost" block onClick={forgetInviteCode}>
               {t('lock.otherCode')}
             </Button>

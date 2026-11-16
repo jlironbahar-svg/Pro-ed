@@ -100,7 +100,9 @@ async function main(): Promise<void> {
   }
 
   const hasUsers = db.prepare('SELECT COUNT(*) AS n FROM users').get() as { n: number };
-  if (hasUsers.n === 0) {
+  if (config.openAccess) {
+    console.log('Open access: no invite codes needed. Every phone that opens ProEd appears in ProEd Admin.');
+  } else if (hasUsers.n === 0) {
     const user = createUser(db, option('--label') ?? 'Admin');
     audit(db, 'invite.create', `${formatCode(user.code)} (${user.label}) from setup script`);
     console.log(`First invite code: ${formatCode(user.code)}  (label: ${user.label})`);

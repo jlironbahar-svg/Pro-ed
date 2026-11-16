@@ -75,6 +75,10 @@ const fr = {
   'reason.invalid_request': 'Requête invalide',
 
   'users.search': 'Rechercher un nom ou un code',
+  'users.unnamed': 'Élève sans nom',
+  'users.rename': 'Nom affiché',
+  'users.renameHint': 'Seulement pour toi : ProEd ne connaît pas les noms des élèves.',
+  'users.openHint': 'Accès libre : chaque téléphone qui ouvre ProEd apparaît ici. Donne-lui un nom, passe-le en bêta ou bloque-le.',
   'users.new': "Nouveau code d'invitation",
   'users.label': 'Prénom ou note (facultatif)',
   'users.create': 'Créer le code',
@@ -229,6 +233,10 @@ const en: Record<Key, string> = {
   'reason.invalid_request': 'Invalid request',
 
   'users.search': 'Search a name or code',
+  'users.unnamed': 'Unnamed student',
+  'users.rename': 'Display name',
+  'users.renameHint': "Only for you: ProEd doesn't know students' names.",
+  'users.openHint': 'Open access: every phone that opens ProEd shows up here. Name it, move it to beta or block it.',
   'users.new': 'New invite code',
   'users.label': 'First name or note (optional)',
   'users.create': 'Create code',

@@ -6,7 +6,20 @@ import type { Config } from '../config.js';
 import { normalizeCode } from '../lib/codes.js';
 import { buildClaims, decideCheck, type CheckUser } from '../lib/access.js';
 import type { AccessTokens } from '../lib/tokens.js';
-import { bindUsername, findUser, findUserByCode, getRevision, getSystem, listFlags, logEvent, touchDevice, type UserRow } from '../repo.js';
+import {
+  bindUsername,
+  createUser,
+  findUser,
+  findUserByCode,
+  findUserByDevice,
+  findUserByUsernameHash,
+  getRevision,
+  getSystem,
+  listFlags,
+  logEvent,
+  touchDevice,
+  type UserRow,
+} from '../repo.js';
 
 const DEVICE_TYPES = ['iphone-pwa', 'android-apk', 'web'];
 
@@ -18,6 +31,21 @@ const device = {
 
 function toCheckUser(row: UserRow | undefined): CheckUser | undefined {
   return row ? { id: row.id, channel: row.channel, blocked: !!row.blocked, usernameHash: row.username_hash } : undefined;
+}
+
+/**
+ * Open access (no invite codes): one user per Pronote account (username hash), else per device.
+ * A device that signs in to another Pronote account moves to that account's user.
+ */
+function openAccessUser(db: DB, deviceId: string, usernameHash: string | undefined): UserRow {
+  const deviceUser = findUserByDevice(db, deviceId);
+  if (usernameHash) {
+    const owner = findUserByUsernameHash(db, usernameHash);
+    if (owner) return owner;
+    if (deviceUser && !deviceUser.username_hash) return deviceUser;
+    return createUser(db, '');
+  }
+  return deviceUser ?? createUser(db, '');
 }
 
 /*
@@ -35,7 +63,7 @@ export async function apiRoutes(app: FastifyInstance, opts: { db: DB; config: Co
       schema: {
         body: {
           type: 'object',
-          required: ['inviteCode', 'deviceId', 'deviceType', 'appVersion'],
+          required: ['deviceId', 'deviceType', 'appVersion'],
           additionalProperties: false,
           properties: {
             inviteCode: { type: 'string', maxLength: 32 },
@@ -47,9 +75,10 @@ export async function apiRoutes(app: FastifyInstance, opts: { db: DB; config: Co
     },
     async (req): Promise<CheckResponse> => {
       const body = req.body;
-      const code = normalizeCode(body.inviteCode);
+      const code = normalizeCode(body.inviteCode ?? '');
       const appVersion = isValidVersion(body.appVersion) ? body.appVersion : '0.0.0';
-      const row = code ? findUserByCode(db, code) : undefined;
+      let row = code ? findUserByCode(db, code) : undefined;
+      if (!row && config.openAccess) row = openAccessUser(db, body.deviceId, body.usernameHash);
       const user = toCheckUser(row);
       const decision = decideCheck(user, body.usernameHash);
       const now = Date.now();

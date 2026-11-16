@@ -11,8 +11,8 @@ const config: CapacitorConfig = {
     allowMixedContent: false,
   },
   plugins: {
-    // The admin app uses the WebView's own fetch (needed for the APK upload); the server allows its origin (CORS).
-    CapacitorHttp: { enabled: false },
+    // Native HTTP: no CORS, and no ngrok warning page (it only targets browsers). FormData uploads work too.
+    CapacitorHttp: { enabled: true },
     SystemBars: { insetsHandling: 'css' },
   },
 };
