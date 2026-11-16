@@ -1,5 +1,5 @@
 import { CapacitorHttp } from '@capacitor/core';
-import { createSessionHandle } from 'pawnote';
+import { createSessionHandle } from '@blockshub/pawnote-lts';
 import { isNative, serverUrl } from '../lib/platform';
 
 export type Fetcher = NonNullable<Parameters<typeof createSessionHandle>[0]>;
@@ -22,16 +22,6 @@ export class NetworkError extends Error {
   constructor(public readonly code: 'offline' | 'relay' | 'blocked' | 'rate_limited') {
     super(code);
   }
-}
-
-/**
- * Compatibility fix for Pronote 2026: the login page now writes `Start ({...});} catch`, with a
- * semicolon that pawnote 1.6.2 does not expect (it looks for `)} catch`), so every login failed
- * with "page unavailable". We remove that semicolon before pawnote reads the page.
- */
-export function fixPronoteContent(url: URL, content: string): string {
-  if (!/\.html$/i.test(url.pathname)) return content;
-  return content.replace(/(Start\s*\(\s*\{[^}]*\}\s*\))\s*;\s*\}/, '$1}');
 }
 
 function plainHeaders(h: FetcherRequest['headers']): Record<string, string> {
@@ -70,7 +60,7 @@ const relayFetcher: Fetcher = async (req) => {
   if (!res.ok) throw new NetworkError('relay');
   const data = (await res.json()) as { status: number; headers: Record<string, string>; body: string };
   remember(req, data.status, data.body.length);
-  return { status: data.status, content: fixPronoteContent(req.url, data.body), headers: data.headers };
+  return { status: data.status, content: data.body, headers: data.headers };
 };
 
 /** Android APK: native HTTP through CapacitorHttp, no CORS, no relay. */
@@ -91,7 +81,7 @@ const nativeFetcher: Fetcher = async (req) => {
     });
     const content = typeof res.data === 'string' ? res.data : JSON.stringify(res.data);
     remember(req, res.status, content.length);
-    return { status: res.status, content: fixPronoteContent(req.url, content), headers: res.headers };
+    return { status: res.status, content, headers: res.headers };
   } catch {
     throw new NetworkError('offline');
   }

@@ -9,7 +9,7 @@ import {
   SessionExpiredError,
   SuspendedIPError,
   UnreachableError,
-} from 'pawnote';
+} from '@blockshub/pawnote-lts';
 import type { TKey } from '../lib/i18n';
 import { NetworkError, lastPronoteExchange } from './fetcher';
 

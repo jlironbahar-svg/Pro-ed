@@ -16,7 +16,7 @@ import {
   type RefreshInformation,
   type SecurityModal,
   type SessionHandle,
-} from 'pawnote';
+} from '@blockshub/pawnote-lts';
 import { secure, randomId } from '../lib/storage';
 import { htmlToText } from '../lib/html';
 import { startOfDay } from '../lib/format';

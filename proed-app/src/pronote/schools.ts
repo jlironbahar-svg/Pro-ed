@@ -1,4 +1,4 @@
-import { geolocation } from 'pawnote';
+import { geolocation } from '@blockshub/pawnote-lts';
 import { getFetcher } from './fetcher';
 
 export interface School {
