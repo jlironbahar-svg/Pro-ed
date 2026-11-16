@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "rev": 21,
-  "updatedAt": 1794756588804,
+  "rev": 22,
+  "updatedAt": 1794803734166,
   "salt": "oCRFlBf3oDNLB66xdcN4QH5z",
   "iterations": 150000,
   "graceHours": 72,
@@ -50,6 +50,13 @@
       "channel": "beta",
       "blocked": false,
       "createdAt": 1794756486278
+    },
+    {
+      "id": "d034fac9-94a8-4c77-90f9-7a796ccb5a84",
+      "codeHash": "dd97a2509e69ad8c561c1232b00ccbcba574eb5be479cc0029554ba927f736f1",
+      "channel": "normal",
+      "blocked": false,
+      "createdAt": 1794803732914
     }
   ]
 }
