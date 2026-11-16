@@ -35,7 +35,7 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: 21
@@ -54,19 +54,25 @@ jobs:
           fi
           echo "VITE_GITHUB_REPO=${{ github.repository }}" >> $ENV
           echo "VITE_ACCESS_PUBLIC_KEY=${{ vars.PROED_ACCESS_PUBLIC_KEY }}" >> ${{ matrix.app }}/.env.android
-      # Same debug signing key on every build, so a new APK installs over the previous one.
-      # (Kept in the Actions cache: it expires after 7 days without any build.)
-      - name: Reuse the debug signing key
+      # Same signing key on every build, so a new APK installs over the previous one.
+      # Without your own keystore secrets, a key is created on the first build and kept in the
+      # Actions cache (it expires after 7 days without any build). Your secrets always win.
+      - name: Reuse the CI signing key
         uses: actions/cache@v4
         with:
-          path: ~/.android/debug.keystore
-          key: debug-keystore-${{ matrix.app }}-v1
+          path: ~/proed-signing/${{ matrix.app }}.jks
+          key: proed-signing-${{ matrix.app }}-v1
+      - name: Create the CI signing key on the first build
+        run: |
+          mkdir -p ~/proed-signing
+          F=~/proed-signing/${{ matrix.app }}.jks
+          if [ ! -f "$F" ]; then
+            keytool -genkeypair -noprompt -keystore "$F" -alias proed -storepass proed-ci-key -keypass proed-ci-key \
+              -dname "CN=ProEd" -keyalg RSA -keysize 2048 -validity 10000
+          fi
       - name: Build web app and sync Android project
         run: npm run android:sync -w ${{ matrix.app }}
-      - name: Debug APK
-        working-directory: ${{ matrix.app }}/android
-        run: ./gradlew assembleDebug --no-daemon
-      - name: Release APK (only when the signing secrets exist)
+      - name: Release APK
         working-directory: ${{ matrix.app }}/android
         env:
           KEYSTORE_BASE64: ${{ secrets[format('{0}_KEYSTORE_BASE64', matrix.secret_prefix)] }}
@@ -74,16 +80,20 @@ jobs:
           PROED_KEY_ALIAS: ${{ secrets[format('{0}_KEY_ALIAS', matrix.secret_prefix)] }}
           PROED_KEY_PASSWORD: ${{ secrets[format('{0}_KEY_PASSWORD', matrix.secret_prefix)] }}
         run: |
-          if [ -z "$KEYSTORE_BASE64" ]; then echo "No signing secrets, skipping release build."; exit 0; fi
-          echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.jks"
-          PROED_KEYSTORE_FILE="$RUNNER_TEMP/release.jks" ./gradlew assembleRelease --no-daemon
-          rm -f "$RUNNER_TEMP/release.jks"
-      - name: Collect APK (signed release when available, else debug)
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "Signing with your keystore secrets."
+            echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.jks"
+            PROED_KEYSTORE_FILE="$RUNNER_TEMP/release.jks" ./gradlew assembleRelease --no-daemon
+            rm -f "$RUNNER_TEMP/release.jks"
+          else
+            echo "Signing with the CI key."
+            PROED_KEYSTORE_FILE=~/proed-signing/${{ matrix.app }}.jks PROED_KEYSTORE_PASSWORD=proed-ci-key \
+              PROED_KEY_ALIAS=proed PROED_KEY_PASSWORD=proed-ci-key ./gradlew assembleRelease --no-daemon
+          fi
+      - name: Collect APK
         run: |
           mkdir -p out
-          RELEASE=${{ matrix.app }}/android/app/build/outputs/apk/release/app-release.apk
-          if [ -f "$RELEASE" ]; then cp "$RELEASE" out/${{ matrix.name }}.apk
-          else cp ${{ matrix.app }}/android/app/build/outputs/apk/debug/app-debug.apk out/${{ matrix.name }}.apk; fi
+          cp ${{ matrix.app }}/android/app/build/outputs/apk/release/app-release.apk out/${{ matrix.name }}.apk
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.name }}-apk
