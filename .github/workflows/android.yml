@@ -134,7 +134,12 @@ jobs:
           (cd $B/server && node dist/setup.js --secrets-only >/dev/null && PROED_SQLITE=node PORT=8799 timeout 8 node --env-file=.env dist/index.js > ../smoke.log 2>&1 &) ; sleep 5
           curl -sf http://127.0.0.1:8799/healthz && curl -sf -o /dev/null http://127.0.0.1:8799/ && curl -sf -o /dev/null http://127.0.0.1:8799/console/
           grep -q "node:sqlite" $B/smoke.log
-          rm -rf $B/server/.env $B/server/data $B/smoke.log
+          # Same with sql.js (for phones where node:sqlite crashes).
+          (cd $B/server && PROED_SQLITE=sqljs PORT=8798 timeout 10 node --env-file=.env dist/index.js > ../smoke2.log 2>&1 &) ; sleep 6
+          curl -sf http://127.0.0.1:8798/healthz
+          curl -sf -X POST http://127.0.0.1:8798/api/check -H 'content-type: application/json' -d '{"deviceId":"ci-smoke-0001","deviceType":"android-apk","appVersion":"1.0.0"}' | grep -q token
+          grep -q "sql.js" $B/smoke2.log
+          rm -rf $B/server/.env $B/server/data $B/smoke.log $B/smoke2.log
           (cd bundle && zip -qr ../ProEd-Server.zip proed)
           ls -la ProEd-Server.zip
       - uses: actions/upload-artifact@v4

@@ -1,9 +1,10 @@
 import { assertSecrets, loadConfig } from './config.js';
 import { buildApp } from './app.js';
-import { openDb, pruneOldData } from './db.js';
+import { openDb, prepareSqlite, pruneOldData } from './db.js';
 
 const config = loadConfig();
 assertSecrets(config);
+await prepareSqlite();
 const db = openDb(config.dataDir);
 console.log(`ProEd server: SQLite driver ${db.driver}`);
 pruneOldData(db);

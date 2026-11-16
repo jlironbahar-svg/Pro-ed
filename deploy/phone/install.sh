@@ -15,7 +15,20 @@ mkdir -p "$PREFIX/etc/apt/apt.conf.d"
 printf 'Dpkg::Options { "--force-confdef"; "--force-confold"; };\n' > "$PREFIX/etc/apt/apt.conf.d/99proed"
 pkg update -y
 pkg install -y nodejs-lts curl unzip proot
-node -e "require('node:sqlite')" 2>/dev/null || { echo "This Node.js has no node:sqlite. Try: pkg install nodejs"; exit 1; }
+# Subshells keep "Aborted" crash messages out of the screen.
+if ! (node -e "process.exit(0)") >/dev/null 2>&1; then
+  echo "Node.js LTS does not start on this phone. Trying the other Node.js package..."
+  pkg install -y nodejs
+  if ! (node -e "process.exit(0)") >/dev/null 2>&1; then
+    echo "Node.js does not start on this phone. Send a photo of this to Claude:"
+    uname -a; node -v || true
+    exit 1
+  fi
+fi
+echo "Node.js $(node -v) works."
+# Database: Node's built-in SQLite if it works here, else sql.js (pure JavaScript, always works).
+if (node -e "require('node:sqlite')") >/dev/null 2>&1; then SQLITE_DRIVER=node; else SQLITE_DRIVER=sqljs; fi
+echo "Database driver: $SQLITE_DRIVER"
 
 echo "== 2/5 Downloading the ProEd server"
 TMP="$PREFIX/tmp/proed-install"
@@ -64,6 +77,7 @@ setenv PUBLIC_URL "https://$NGROK_DOMAIN"
 setenv FORCE_HTTPS false
 setenv TRUST_PROXY true
 setenv OPEN_ACCESS true
+setenv PROED_SQLITE "$SQLITE_DRIVER"
 setenv DATA_DIR "$DIR/server/data"
 if [ "$PROED_SAVE_SETUP" = "1" ]; then
   # The Windows helper reads this once (admin password, 2FA key) and deletes it.

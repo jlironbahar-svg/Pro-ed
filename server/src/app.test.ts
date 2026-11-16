@@ -5,7 +5,7 @@ import { generateSecret as totpSecret } from 'otplib';
 import type { AccessClaims, CheckResponse, DashboardData } from '@proed/shared/core';
 import { buildApp } from './app.js';
 import { loadConfig } from './config.js';
-import { openDb, type DB } from './db.js';
+import { openDb, prepareSqlite, type DB } from './db.js';
 import { generateAccessKeys, generateSecret } from './lib/keys.js';
 import { hashPassword } from './lib/password.js';
 import { createUser } from './repo.js';
@@ -32,6 +32,7 @@ let code: string;
 const secret = totpSecret();
 
 beforeAll(async () => {
+  await prepareSqlite();
   db = openDb(':memory:');
   db.prepare('INSERT INTO admin (id, password_hash, totp_secret, created_at) VALUES (1, ?, ?, ?)').run(await hashPassword('correct-horse-battery'), secret, Date.now());
   code = createUser(db, 'Lina').code;

@@ -12,7 +12,7 @@ import { randomBytes } from 'node:crypto';
 import { generateSecret as totpSecret, generateURI } from 'otplib';
 import QRCode from 'qrcode';
 import { loadConfig } from './config.js';
-import { openDb } from './db.js';
+import { openDb, prepareSqlite } from './db.js';
 import { formatCode } from './lib/codes.js';
 import { hashPassword } from './lib/password.js';
 import { generateAccessKeys, generateSecret, publicKeySpkiBase64 } from './lib/keys.js';
@@ -75,6 +75,7 @@ async function main(): Promise<void> {
   console.log(`\nAccess public key (optional VITE_ACCESS_PUBLIC_KEY for the app builds):\n${publicKeySpkiBase64(config.accessPublicKey)}\n`);
   if (flag('--secrets-only')) return;
 
+  await prepareSqlite();
   const db = openDb(config.dataDir);
   const existing = db.prepare('SELECT id FROM admin WHERE id = 1').get();
   if (existing && !flag('--reset-admin')) {
