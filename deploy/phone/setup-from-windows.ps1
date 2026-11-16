@@ -13,7 +13,8 @@ $ProgressPreference = 'SilentlyContinue'
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
 $Repo = 'jlironbahar-svg/Pro-ed'
-$InstallUrl = "https://raw.githubusercontent.com/$Repo/HEAD/deploy/phone/install.sh"
+# ?t= avoids GitHub serving a cached older copy right after an update.
+$InstallUrl = "https://raw.githubusercontent.com/$Repo/HEAD/deploy/phone/install.sh?t=$([DateTimeOffset]::UtcNow.ToUnixTimeSeconds())"
 $Work = Join-Path $env:LOCALAPPDATA 'ProEd'
 $Home_ = '/data/data/com.termux/files/home'
 $TermuxBin = '/data/data/com.termux/files/usr/bin'
@@ -116,10 +117,10 @@ export NGROK_DOMAIN='$Domain'
 export PROED_SAVE_SETUP=1
 export DEBIAN_FRONTEND=noninteractive
 rm -f ~/proed-status
-# Upgrade all Termux packages first (a fresh Termux is older than its package server; curl breaks otherwise).
+# Upgrade all Termux packages first with apt-get (pkg needs curl, which a partial upgrade breaks).
 mkdir -p "`$PREFIX/etc/apt/apt.conf.d"
 printf 'Dpkg::Options { "--force-confdef"; "--force-confold"; };\n' > "`$PREFIX/etc/apt/apt.conf.d/99proed"
-if pkg upgrade -y && curl -fsSL $InstallUrl -o ~/proed-install.sh && bash ~/proed-install.sh; then echo ok > ~/proed-status; else echo failed > ~/proed-status; fi
+if apt-get update && apt-get -y full-upgrade && curl -fsSL "$InstallUrl" -o ~/proed-install.sh && bash ~/proed-install.sh; then echo ok > ~/proed-status; else echo failed > ~/proed-status; fi
 rm -f ~/proed-go.sh ~/proed-install.sh
 "@
 $b64 = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(($go -replace "`r", '')))

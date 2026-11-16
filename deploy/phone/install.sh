@@ -14,13 +14,15 @@ echo "== 1/5 Termux packages (Node.js, unzip, proot)"
 mkdir -p "$PREFIX/etc/apt/apt.conf.d"
 printf 'Dpkg::Options { "--force-confdef"; "--force-confold"; };\n' > "$PREFIX/etc/apt/apt.conf.d/99proed"
 # Full upgrade first: a fresh Termux is older than its package server, and installing a new curl
-# next to an old openssl breaks curl ("CANNOT LINK EXECUTABLE"). Upgrading everything keeps them in step.
-pkg upgrade -y
-pkg install -y nodejs-lts curl unzip proot
+# next to an old openssl breaks curl ("CANNOT LINK EXECUTABLE"). apt-get is used, not pkg,
+# because pkg itself needs curl.
+apt-get update
+apt-get -y full-upgrade
+apt-get -y install nodejs-lts curl unzip proot
 # Subshells keep "Aborted" crash messages out of the screen.
 if ! (node -e "process.exit(0)") >/dev/null 2>&1; then
   echo "Node.js LTS does not start on this phone. Trying the other Node.js package..."
-  pkg install -y nodejs
+  apt-get -y install nodejs
   if ! (node -e "process.exit(0)") >/dev/null 2>&1; then
     echo "Node.js does not start on this phone. Send a photo of this to Claude:"
     uname -a; node -v || true
