@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "rev": 34,
-  "updatedAt": 1794803916317,
+  "rev": 35,
+  "updatedAt": 1794832805362,
   "salt": "oCRFlBf3oDNLB66xdcN4QH5z",
   "iterations": 150000,
   "graceHours": 72,
@@ -30,13 +30,6 @@
     }
   ],
   "users": [
-    {
-      "id": "4dbdf650-02e4-421a-a2af-960d600aa618",
-      "codeHash": "0f6231def92df7f31ea791e5dfa5a410cd8c8f51143acb9799af5378c7a49167",
-      "channel": "beta",
-      "blocked": false,
-      "createdAt": 1794756443749
-    },
     {
       "id": "d034fac9-94a8-4c77-90f9-7a796ccb5a84",
       "codeHash": "dd97a2509e69ad8c561c1232b00ccbcba574eb5be479cc0029554ba927f736f1",
