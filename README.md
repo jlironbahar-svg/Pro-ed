@@ -307,6 +307,8 @@ Your links:
 
 On the free plan, ngrok shows a short warning page the first time a browser opens the address: tap **Visit Site** once. The apps are not affected.
 
+On Android, ngrok cannot download its certificate revocation list, so the phone setup turns that check off (`crl_noverify: true` in `~/proed/ngrok.yml`). The risk is small but real: if ngrok's own certificate were ever stolen and revoked, someone could intercept traffic through your address. Remove that line if you move the server to a regular computer.
+
 To update the server later, run the same `curl ... | bash` command again. It keeps your settings, admin account and data.
 
 ### Free option (0 EUR, no card): your own computer + Tailscale Funnel

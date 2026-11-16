@@ -70,7 +70,7 @@ if [ ! -f "$DIR/ngrok.env" ] || [ -n "$NGROK_TOKEN" ]; then
   NGROK_DOMAIN="${NGROK_DOMAIN#https://}"; NGROK_DOMAIN="${NGROK_DOMAIN%/}"
   "$DIR/ngrok" config add-authtoken "$NGROK_TOKEN" >/dev/null
   # Own config with DNS servers: on Android, ngrok cannot find any by itself.
-  printf 'version: "2"\nauthtoken: %s\ndns_resolver_ips:\n  - 1.1.1.1\n  - 8.8.8.8\n' "$NGROK_TOKEN" > "$DIR/ngrok.yml"
+  printf 'version: "2"\nauthtoken: %s\ncrl_noverify: true\ndns_resolver_ips:\n  - 1.1.1.1\n  - 8.8.8.8\n' "$NGROK_TOKEN" > "$DIR/ngrok.yml"
   chmod 600 "$DIR/ngrok.yml"
   echo "NGROK_DOMAIN=$NGROK_DOMAIN" > "$DIR/ngrok.env"
 fi

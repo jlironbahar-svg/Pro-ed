@@ -14,9 +14,12 @@ CFG="$DIR/ngrok.yml"
 if [ ! -s "$CFG" ]; then
   DEFAULT_CFG=$("$DIR/ngrok" config check 2>/dev/null | sed -n 's/.* at \(\/.*\.yml\).*/\1/p' | head -n 1)
   TOKEN=$(grep -h -m 1 'authtoken:' "$DEFAULT_CFG" "$HOME/.config/ngrok/ngrok.yml" "$HOME/.ngrok2/ngrok.yml" 2>/dev/null | head -n 1 | awk '{print $2}')
-  printf 'version: "2"\nauthtoken: %s\ndns_resolver_ips:\n  - 1.1.1.1\n  - 8.8.8.8\n' "$TOKEN" > "$CFG"
+  printf 'version: "2"\nauthtoken: %s\ncrl_noverify: true\ndns_resolver_ips:\n  - 1.1.1.1\n  - 8.8.8.8\n' "$TOKEN" > "$CFG"
   chmod 600 "$CFG"
 fi
+# User's choice (2026-11-16): ngrok's CRL download ignores dns_resolver_ips and fails on Android,
+# so the revocation check is skipped (documented ngrok option; small risk, see README).
+grep -q '^crl_noverify:' "$CFG" || echo 'crl_noverify: true' >> "$CFG"
 SSL_CERT_FILE="$PREFIX/etc/tls/cert.pem" nohup "$DIR/ngrok" http 8787 --url="https://$NGROK_DOMAIN" --config "$CFG" --log=stdout > "$DIR/ngrok.log" 2>&1 &
 sleep 8
 echo "ProEd: https://$NGROK_DOMAIN"
