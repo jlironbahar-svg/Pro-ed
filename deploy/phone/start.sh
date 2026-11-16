@@ -12,7 +12,7 @@ sleep 4
 SSL_CERT_FILE="$PREFIX/etc/tls/cert.pem" nohup termux-chroot "$DIR/ngrok" http 8787 --url="https://$NGROK_DOMAIN" --log=stdout > "$DIR/ngrok.log" 2>&1 &
 sleep 8
 echo "ProEd: https://$NGROK_DOMAIN"
-if curl -s -m 15 -H "ngrok-skip-browser-warning: 1" "https://$NGROK_DOMAIN/healthz" | grep -q ok; then
+if curl -s -m 15 -H "ngrok-skip-browser-warning: 1" "https://$NGROK_DOMAIN/healthz" | grep -q "\"ok\":true"; then
   echo "Online. Keep the phone charging and connected to Wi-Fi."
 else
   echo "Not reachable yet. Logs: $DIR/server.log and $DIR/ngrok.log"

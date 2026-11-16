@@ -154,7 +154,7 @@ for ($i = 0; $i -lt 12; $i++) {
   Start-Sleep -Seconds 5
   try {
     $r = Invoke-WebRequest -UseBasicParsing -Uri "https://$Domain/healthz" -Headers @{ 'ngrok-skip-browser-warning' = '1' } -TimeoutSec 10
-    if ($r.Content -match 'ok') { $online = $true; break }
+    if ($r.Content -match ([regex]::Escape(ok:true))) { $online = $true; break }
   } catch { }
 }
 
