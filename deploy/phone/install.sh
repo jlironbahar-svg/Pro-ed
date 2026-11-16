@@ -41,7 +41,7 @@ curl -fL -o "$TMP/proed.zip" "$ZIP_URL"
 unzip -q "$TMP/proed.zip" -d "$TMP"
 if [ -d "$DIR" ]; then
   # Keep settings, data and ngrok between updates.
-  for keep in server/.env server/data ngrok ngrok.env; do
+  for keep in server/.env server/data ngrok ngrok.env ngrok.yml; do
     if [ -e "$DIR/$keep" ]; then mkdir -p "$(dirname "$TMP/proed/$keep")"; rm -rf "$TMP/proed/$keep"; mv "$DIR/$keep" "$TMP/proed/$keep"; fi
   done
   rm -rf "$DIR"
@@ -69,6 +69,9 @@ if [ ! -f "$DIR/ngrok.env" ] || [ -n "$NGROK_TOKEN" ]; then
   fi
   NGROK_DOMAIN="${NGROK_DOMAIN#https://}"; NGROK_DOMAIN="${NGROK_DOMAIN%/}"
   "$DIR/ngrok" config add-authtoken "$NGROK_TOKEN" >/dev/null
+  # Own config with DNS servers: on Android, ngrok cannot find any by itself.
+  printf 'version: "2"\nauthtoken: %s\ndns_resolver_ips:\n  - 1.1.1.1\n  - 8.8.8.8\n' "$NGROK_TOKEN" > "$DIR/ngrok.yml"
+  chmod 600 "$DIR/ngrok.yml"
   echo "NGROK_DOMAIN=$NGROK_DOMAIN" > "$DIR/ngrok.env"
 fi
 . "$DIR/ngrok.env"

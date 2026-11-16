@@ -8,8 +8,16 @@ pkill -f "ngrok http" 2>/dev/null || true
 cd "$DIR/server"
 nohup node --env-file=.env dist/index.js > "$DIR/server.log" 2>&1 &
 sleep 4
-# termux-chroot gives ngrok the /etc files (DNS) it expects on Linux.
-SSL_CERT_FILE="$PREFIX/etc/tls/cert.pem" nohup termux-chroot "$DIR/ngrok" http 8787 --url="https://$NGROK_DOMAIN" --log=stdout > "$DIR/ngrok.log" 2>&1 &
+# ngrok is a Linux program: on Android it finds no DNS servers (/etc/resolv.conf does not exist),
+# and proot/termux-chroot crashes on old phones. So it runs directly, with DNS servers in its own config.
+CFG="$DIR/ngrok.yml"
+if [ ! -s "$CFG" ]; then
+  DEFAULT_CFG=$("$DIR/ngrok" config check 2>/dev/null | sed -n 's/.* at \(\/.*\.yml\).*/\1/p' | head -n 1)
+  TOKEN=$(grep -h -m 1 'authtoken:' "$DEFAULT_CFG" "$HOME/.config/ngrok/ngrok.yml" "$HOME/.ngrok2/ngrok.yml" 2>/dev/null | head -n 1 | awk '{print $2}')
+  printf 'version: "2"\nauthtoken: %s\ndns_resolver_ips:\n  - 1.1.1.1\n  - 8.8.8.8\n' "$TOKEN" > "$CFG"
+  chmod 600 "$CFG"
+fi
+SSL_CERT_FILE="$PREFIX/etc/tls/cert.pem" nohup "$DIR/ngrok" http 8787 --url="https://$NGROK_DOMAIN" --config "$CFG" --log=stdout > "$DIR/ngrok.log" 2>&1 &
 sleep 8
 echo "ProEd: https://$NGROK_DOMAIN"
 if curl -s -m 15 -H "ngrok-skip-browser-warning: 1" "https://$NGROK_DOMAIN/healthz" | grep -q "\"ok\":true"; then
