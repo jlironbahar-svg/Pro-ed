@@ -23,5 +23,6 @@ echo "ProEd: https://$NGROK_DOMAIN"
 if curl -s -m 15 -H "ngrok-skip-browser-warning: 1" "https://$NGROK_DOMAIN/healthz" | grep -q "\"ok\":true"; then
   echo "Online. Keep the phone charging and connected to Wi-Fi."
 else
-  echo "Not reachable yet. Logs: $DIR/server.log and $DIR/ngrok.log"
+  echo "Not reachable yet. Last lines of the ngrok log (send a photo of this to Claude):"
+  tail -n 12 "$DIR/ngrok.log"
 fi

@@ -160,7 +160,11 @@ for ($i = 0; $i -lt 12; $i++) {
 
 Write-Host ''
 Write-Host '==================== ProEd ====================' -ForegroundColor Cyan
-if ($online) { Write-Host "Online: https://$Domain" -ForegroundColor Green } else { Write-Host "Not reachable yet. On the phone, type proed-start in Termux. Address: https://$Domain" -ForegroundColor Yellow }
+if ($online) { Write-Host "Online: https://$Domain" -ForegroundColor Green } else {
+  Write-Host "Not reachable yet. Address: https://$Domain" -ForegroundColor Yellow
+  Write-Host 'ngrok log from the phone (send a photo of this to Claude):' -ForegroundColor Yellow
+  & $Adb shell "run-as com.termux sh -c 'tail -n 15 $Home_/proed/ngrok.log'"
+}
 Write-Host "iPhone (Safari, Share > Add to Home Screen): https://$Domain"
 Write-Host "Admin in a browser: https://$Domain/console/"
 if ($password) {
