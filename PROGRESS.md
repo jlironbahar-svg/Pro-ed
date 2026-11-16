@@ -1,6 +1,6 @@
 # ProEd progress
 
-Status: IN PROGRESS (phase 12: server on an old Android phone, open access)
+Status: COMPLETE (phases 1-12 done; waiting for the user ngrok domain to set SERVER_URL and rebuild the APKs in server mode)
 
 Legend: TODO / DOING NOW / DONE. Exactly one step is DOING NOW at any time.
 
@@ -103,7 +103,7 @@ Legend: TODO / DOING NOW / DONE. Exactly one step is DOING NOW at any time.
 - [DONE] 12.3 Student app: no invite screen in open access (auto check), ngrok-skip-browser-warning header
 - [DONE] 12.4 Admin app: native HTTP, open-access user list (rename, beta/normal, block), hide invite creation
 - [DONE] 12.5 Phone bundle (ProEd-Server.zip) built by CI + Termux install/start scripts (ngrok static domain)
-- [DOING NOW] 12.6 Typecheck, build, tests, README, commit, CI run, verify
+- [DONE] 12.6 Typecheck, build, tests, README, commit, CI run, verify
 
 ## Decisions
 - Node 22, npm workspaces. Root scripts run each workspace.
