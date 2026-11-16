@@ -280,6 +280,12 @@ The server runs in **open access**: no invite codes. Every phone that opens ProE
 2. **Termux on the old phone.**
    1. Install Termux from F-Droid (<https://f-droid.org/packages/com.termux/>), or from <https://github.com/termux/termux-app/releases>. On a Nexus 6, take the file ending in `armeabi-v7a.apk`.
    2. Open it once.
+   **Faster, from a Windows PC over USB:** on the phone, turn on Developer options > USB debugging and plug it into the PC. Open PowerShell on the PC and paste the line below. It downloads ADB, installs Termux and ProEd on the phone, shows your admin password and starts the server. Steps 3 and 4 below are then already done.
+
+   ```
+   irm https://raw.githubusercontent.com/jlironbahar-svg/Pro-ed/HEAD/deploy/phone/setup-from-windows.ps1 | iex
+   ```
+
 3. **Install ProEd.** In Termux, type:
 
    ```
