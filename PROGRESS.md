@@ -145,6 +145,7 @@ Legend: TODO / DOING NOW / DONE. Exactly one step is DOING NOW at any time.
 - Phone test 5: ngrok starts and reaches its servers, but its CRL download (crl.ngrok-agent.com) uses the system resolver and fails on Android. The user chose to turn the check off: ngrok.yml has crl_noverify: true (documented ngrok option). Risk explained to the user: if ngrok's certificate were stolen and revoked, traffic through the tunnel could be intercepted.
 - 2026-11-16 18:43 UTC: phone server ONLINE at https://idealness-chowder-refute.ngrok-free.dev (health, PWA, /console, open-access check, relay verified from outside). SERVER_URL set: APKs now build in server mode.
 - Server-mode APKs published (run 43931850518): both point to https://idealness-chowder-refute.ngrok-free.dev, same signing certificates as before (updates install over the old ones).
+- 2026-11-17: user saw ERR_NGROK_8012 (ngrok up, Node server down). start.sh now runs the server and ngrok in restart loops (PROED_LOOP markers, stop.sh kills them) and keeps the previous server log. deploy/phone/update-from-windows.ps1 prints the server log, pushes the new scripts over ADB and restarts.
 - iPhone: not possible without a server (Apple allows no sideloaded apps; a PWA needs an HTTPS host and a CORS relay for Pronote). Not built.
 - Demo videos (Playwright, recorded in the VM) were sent to the user: build + tests, student app, admin app, access control. They are not committed (binary files).
 
