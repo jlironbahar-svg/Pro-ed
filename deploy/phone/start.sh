@@ -31,6 +31,12 @@ echo "ProEd: https://$NGROK_DOMAIN"
 if curl -s -m 15 -H "ngrok-skip-browser-warning: 1" "https://$NGROK_DOMAIN/healthz" | grep -q "\"ok\":true"; then
   echo "Online. Keep the phone charging and connected to Wi-Fi."
 else
-  echo "Not reachable yet. Last lines of the ngrok log (send a photo of this to Claude):"
-  tail -n 12 "$DIR/ngrok.log"
+  echo "Not reachable yet. Send a photo of this to Claude."
+  if curl -s -m 5 http://127.0.0.1:8787/healthz | grep -q '"ok":true'; then
+    echo "The server runs; ngrok is the problem. Last lines of the ngrok log:"
+    tail -n 12 "$DIR/ngrok.log"
+  else
+    echo "The server is not running. Last lines of the server log:"
+    tail -n 15 "$DIR/server.log"
+  fi
 fi
