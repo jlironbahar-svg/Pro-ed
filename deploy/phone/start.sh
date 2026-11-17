@@ -36,7 +36,9 @@ else
     echo "The server runs; ngrok is the problem. Last lines of the ngrok log:"
     tail -n 12 "$DIR/ngrok.log"
   else
-    echo "The server is not running. Last lines of the server log:"
-    tail -n 15 "$DIR/server.log"
+    echo "The server is not running. The error:"
+    grep -m 3 -E 'Error|Cannot find|ERR_' "$DIR/server.log"
+    echo "Last lines of the server log:"
+    tail -n 8 "$DIR/server.log"
   fi
 fi

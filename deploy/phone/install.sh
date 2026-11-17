@@ -38,7 +38,10 @@ echo "== 2/5 Downloading the ProEd server"
 TMP="$PREFIX/tmp/proed-install"
 rm -rf "$TMP" && mkdir -p "$TMP"
 curl -fL -o "$TMP/proed.zip" "$ZIP_URL"
+# Check the download before touching the current install (an interrupted download broke files once).
+unzip -tq "$TMP/proed.zip" >/dev/null || { echo "The download is damaged. Check the Wi-Fi and run this again."; exit 1; }
 unzip -q "$TMP/proed.zip" -d "$TMP"
+[ -f "$TMP/proed/node_modules/ajv/dist/compile/resolve.js" ] || { echo "Unzip incomplete (is the phone storage full?). Free some space and run this again."; exit 1; }
 if [ -d "$DIR" ]; then
   # Keep settings, data and ngrok between updates.
   for keep in server/.env server/data ngrok ngrok.env ngrok.yml; do
@@ -95,6 +98,10 @@ else
 fi
 
 echo "== 5/5 Start command"
+# Newest start/stop scripts straight from GitHub (fixes reach phones without waiting for a new package).
+for s in start stop; do
+  curl -fsSL "https://raw.githubusercontent.com/$REPO/HEAD/deploy/phone/$s.sh?t=$(date +%s)" -o "$DIR/$s.sh.new" && mv "$DIR/$s.sh.new" "$DIR/$s.sh" || true
+done
 cp "$DIR/start.sh" "$PREFIX/bin/proed-start" && chmod +x "$PREFIX/bin/proed-start"
 cp "$DIR/stop.sh" "$PREFIX/bin/proed-stop" && chmod +x "$PREFIX/bin/proed-stop"
 echo
